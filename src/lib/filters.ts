@@ -7,7 +7,7 @@ import type { FarmGroup, FarmsGeoJSON } from './farmData';
 export type Filter =
   | { kind: 'label'; label: string }
   | { kind: 'name'; query: string }
-  | { kind: 'catchment'; district: string };
+  | { kind: 'riverBasin'; district: string };
 
 /**
  * Returns the set of group ids that satisfy the group-level filters (combined
@@ -37,7 +37,7 @@ export const matchingGroupIds = (
 
 /**
  * Resolves the set of farms to show. Group-level filters (label, name) are
- * combined with AND; the catchment filter keeps farms in ANY of the selected
+ * combined with AND; the river basin filter keeps farms in ANY of the selected
  * river basin districts (OR). Categories combine with AND.
  */
 export const applyFilters = (
@@ -47,7 +47,7 @@ export const applyFilters = (
 ): FarmsGeoJSON => {
   const groupIds = matchingGroupIds(groups, filters);
   const districts = filters.flatMap((f) =>
-    f.kind === 'catchment' ? [f.district] : [],
+    f.kind === 'riverBasin' ? [f.district] : [],
   );
 
   return {

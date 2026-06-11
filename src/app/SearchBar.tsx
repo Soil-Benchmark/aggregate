@@ -15,7 +15,7 @@ type SearchBarProps = {
 };
 
 /** Filter category the user is composing in the input. */
-type Category = 'label' | 'name' | 'catchment';
+type Category = 'label' | 'name' | 'riverBasin';
 
 /** Returns black or white depending on which reads better on `hex`. */
 const readableText = (hex: string): string => {
@@ -66,9 +66,9 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
 
   // River basin districts the user has selected (selection order preserved).
   const appliedDistricts = filters.flatMap((f) =>
-    f.kind === 'catchment' ? [f.district] : [],
+    f.kind === 'riverBasin' ? [f.district] : [],
   );
-  const hasCatchmentFilter = appliedDistricts.length > 0;
+  const hasRiverBasinFilter = appliedDistricts.length > 0;
 
   const focusInput = () => {
     (category === 'name' ? nameInputRef : inputRef).current?.focus();
@@ -94,10 +94,10 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
   const toggleDistrict = (district: string) => {
     if (appliedDistricts.includes(district)) {
       onChange(
-        filters.filter((f) => !(f.kind === 'catchment' && f.district === district)),
+        filters.filter((f) => !(f.kind === 'riverBasin' && f.district === district)),
       );
     } else {
-      onChange([...filters, { kind: 'catchment', district }]);
+      onChange([...filters, { kind: 'riverBasin', district }]);
     }
     setQuery('');
     focusInput();
@@ -143,10 +143,10 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     if (category === 'name') clearComposing();
   };
 
-  // Deleting the "catchment" tag removes all river basin district filters.
-  const removeCatchmentCategory = () => {
-    onChange(filters.filter((f) => f.kind !== 'catchment'));
-    if (category === 'catchment') clearComposing();
+  // Deleting the "river basin" tag removes all river basin district filters.
+  const removeRiverBasinCategory = () => {
+    onChange(filters.filter((f) => f.kind !== 'riverBasin'));
+    if (category === 'riverBasin') clearComposing();
   };
 
   const clearAll = () => {
@@ -165,8 +165,8 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     } else if (category === 'label') {
       if (appliedLabels.length > 0) setQuery('');
       else clearComposing();
-    } else if (category === 'catchment') {
-      if (hasCatchmentFilter) setQuery('');
+    } else if (category === 'riverBasin') {
+      if (hasRiverBasinFilter) setQuery('');
       else clearComposing();
     }
   };
@@ -178,7 +178,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       ? labels.filter((l) => l.label.toLowerCase().includes(q))
       : [];
   const visibleDistricts =
-    category === 'catchment'
+    category === 'riverBasin'
       ? districts.filter((d) => d.toLowerCase().includes(q))
       : [];
 
@@ -192,8 +192,8 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     !focused && query === '' && (filters.length > 0 || category !== null);
 
   const placeholder =
-    category === 'catchment'
-      ? 'Search for catchment areas or choose below'
+    category === 'riverBasin'
+      ? 'Search for river basin districts or choose below'
       : showPlaceholder
         ? focused
           ? 'Search for farms by distance, area, labels and more'
@@ -216,8 +216,8 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       return (
         <Fragment key="label">
           {(category === 'label' || appliedLabels.length > 0) && (
-            <Badge className="gap-1.5 rounded-full border-transparent bg-emerald-200 px-3 py-1 text-sm font-semibold text-emerald-950">
-              <Stamp size={14} aria-hidden="true" />
+            <Badge className="gap-1.5 rounded-lg border-transparent bg-emerald-200 px-3 py-1.5 text-sm font-medium text-emerald-950">
+              <Stamp size={16} aria-hidden="true" />
               has label
               <button
                 type="button"
@@ -253,8 +253,8 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       // place (so it stays where it is, regardless of other filters).
       return (
         <Fragment key="name">
-          <Badge className="gap-1.5 rounded-full border-transparent bg-white px-3 py-1 text-sm font-semibold text-slate-900">
-            <MessageSquareQuote size={14} aria-hidden="true" />
+          <Badge className="gap-1.5 rounded-lg border-transparent bg-white px-3 py-1.5 text-sm font-medium text-slate-900">
+            <MessageSquareQuote size={16} aria-hidden="true" />
             name
             <button
               type="button"
@@ -280,17 +280,17 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       );
     }
 
-    // catchment: "river basin" tag + chosen districts as plain text (same as
-    // the suggestions below), each with an ×.
+    // river basin: the tag + chosen districts as plain text (same as the
+    // suggestions below), each with an ×.
     return (
-      <Fragment key="catchment">
-        {(category === 'catchment' || hasCatchmentFilter) && (
-          <Badge className="gap-1.5 rounded-full border-transparent bg-sky-200 px-3 py-1 text-sm font-semibold text-sky-950">
-            <Waves size={14} aria-hidden="true" />
+      <Fragment key="riverBasin">
+        {(category === 'riverBasin' || hasRiverBasinFilter) && (
+          <Badge className="gap-1.5 rounded-lg border-transparent bg-sky-200 px-3 py-1.5 text-sm font-medium text-sky-950">
+            <Waves size={16} aria-hidden="true" />
             river basin
             <button
               type="button"
-              onClick={removeCatchmentCategory}
+              onClick={removeRiverBasinCategory}
               aria-label="Remove river basin filter"
               className="ml-0.5 rounded-full hover:bg-sky-950/10"
             >
@@ -333,7 +333,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
         <div className="flex flex-1 flex-wrap items-center gap-2">
           {categoryOrder.map(renderCategorySegment)}
 
-          {/* Shared input: palette/suggestion filter for label & catchment, and
+          {/* Shared input: palette/suggestion filter for label & river basin, and
               the general search field. The name value uses its own inline input,
               so this one is hidden while composing "name". */}
           {category !== 'name' && (
@@ -395,11 +395,11 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => startCategory('catchment')}
+            onClick={() => startCategory('riverBasin')}
             className={cn(
               categoryChipBase,
               'bg-sky-200/90 text-sky-950 hover:bg-sky-200',
-              category === 'catchment' && 'ring-2 ring-white',
+              category === 'riverBasin' && 'ring-2 ring-white',
             )}
           >
             <Waves size={16} aria-hidden="true" />
@@ -436,11 +436,11 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
         </div>
       )}
 
-      {/* Catchment suggestions: river basin districts, filtered by free text */}
-      {focused && category === 'catchment' && (
+      {/* River basin suggestions: districts, filtered by free text */}
+      {focused && category === 'riverBasin' && (
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
           {visibleDistricts.length === 0 ? (
-            <span className="text-sm text-white/70">No matching catchment areas</span>
+            <span className="text-sm text-white/70">No matching river basin districts</span>
           ) : (
             visibleDistricts.map((d) => {
               const selected = appliedDistricts.includes(d);
