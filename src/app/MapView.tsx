@@ -35,7 +35,7 @@ export const MapView = () => {
 
   return (
     <>
-      <Map farms={visibleFarms} groups={data.groups} />
+      <Map farms={visibleFarms} groups={data.groups} labels={data.labels} />
       <SearchBar labels={data.labels} filters={filters} onChange={setFilters} />
     </>
   );
