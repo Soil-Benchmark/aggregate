@@ -1,28 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import {
+  FilterIndex,
+  WATER_BODY_COLORS,
+  WATER_BODY_FALLBACK,
+} from './catchmentFilters';
+import { FilterPanel } from './FilterPanel';
 
 const INITIAL_CENTER: [number, number] = [-1.5491, 53.8008];
 const INITIAL_ZOOM = 5;
-
-type CatchmentOption = { catchment_id: string; name: string; farm_count: number };
-type FilterIndex = {
-  water_body_types: string[];
-  river_basin_districts: string[];
-  catchments: CatchmentOption[];
-};
-
-// Colour catchments by water body type. Keys must match the data values.
-const WATER_BODY_COLORS: Record<string, string> = {
-  River: '#2563eb',
-  Lake: '#06b6d4',
-  'Groundwater Body': '#9333ea',
-  'Transitional Water': '#16a34a',
-  'Coastal Water': '#db2777',
-};
-const WATER_BODY_FALLBACK = '#9ca3af';
 
 // Mapbox match expression: water_body_type -> colour.
 const waterBodyColor = [
@@ -31,56 +20,6 @@ const waterBodyColor = [
   ...Object.entries(WATER_BODY_COLORS).flatMap(([type, color]) => [type, color]),
   WATER_BODY_FALLBACK,
 ] as mapboxgl.ExpressionSpecification;
-
-const toggle = (values: string[], value: string) =>
-  values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
-
-/** A labelled group of checkboxes (OR within the group). Optional `colors`
- *  renders a swatch next to each option, doubling as a legend. */
-const CheckboxGroup = ({
-  label,
-  options,
-  selected,
-  onToggle,
-  onClear,
-  colors,
-}: {
-  label: string;
-  options: string[];
-  selected: string[];
-  onToggle: (value: string) => void;
-  onClear: () => void;
-  colors?: Record<string, string>;
-}) => (
-  <div className="space-y-1">
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-gray-500">{label}</span>
-      {selected.length > 0 && (
-        <button className="text-xs text-blue-600 hover:underline" onClick={onClear}>
-          clear
-        </button>
-      )}
-    </div>
-    <div className="space-y-0.5">
-      {options.map((opt) => (
-        <label key={opt} className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={selected.includes(opt)}
-            onChange={() => onToggle(opt)}
-          />
-          {colors && (
-            <span
-              className="inline-block h-3 w-3 shrink-0 rounded-sm border border-black/10"
-              style={{ backgroundColor: colors[opt] ?? 'transparent' }}
-            />
-          )}
-          <span>{opt}</span>
-        </label>
-      ))}
-    </div>
-  </div>
-);
 
 export const Map = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -94,13 +33,6 @@ export const Map = () => {
   const [riverBasinDistricts, setRiverBasinDistricts] = useState<string[]>([]);
   // Farm filter: show farms in ANY of the selected catchments.
   const [catchments, setCatchments] = useState<string[]>([]);
-  const [catchmentSearch, setCatchmentSearch] = useState('');
-
-  const visibleCatchments = useMemo(() => {
-    const q = catchmentSearch.trim().toLowerCase();
-    const all = index?.catchments ?? [];
-    return q ? all.filter((c) => c.name.toLowerCase().includes(q)) : all;
-  }, [index, catchmentSearch]);
 
   // Create the map, load data, add the two filtered layers.
   useEffect(() => {
@@ -195,66 +127,15 @@ export const Map = () => {
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
-
-      <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 flex-col gap-4 overflow-y-auto rounded-lg bg-white/95 p-4 text-sm text-gray-800 shadow-lg">
-        <div className="space-y-3">
-          <p className="font-semibold text-gray-900">Catchments</p>
-          <CheckboxGroup
-            label="Water body type"
-            options={index?.water_body_types ?? []}
-            selected={waterBodyTypes}
-            onToggle={(v) => setWaterBodyTypes((s) => toggle(s, v))}
-            onClear={() => setWaterBodyTypes([])}
-            colors={WATER_BODY_COLORS}
-          />
-          <CheckboxGroup
-            label="River basin district"
-            options={index?.river_basin_districts ?? []}
-            selected={riverBasinDistricts}
-            onToggle={(v) => setRiverBasinDistricts((s) => toggle(s, v))}
-            onClear={() => setRiverBasinDistricts([])}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <p className="font-semibold text-gray-900">Farms</p>
-            {catchments.length > 0 && (
-              <button
-                className="text-xs text-blue-600 hover:underline"
-                onClick={() => setCatchments([])}
-              >
-                clear ({catchments.length})
-              </button>
-            )}
-          </div>
-          <span className="text-xs text-gray-500">In catchments</span>
-          <input
-            type="text"
-            placeholder="Search catchments…"
-            className="w-full rounded border border-gray-300 px-2 py-1"
-            value={catchmentSearch}
-            onChange={(e) => setCatchmentSearch(e.target.value)}
-          />
-          <div className="max-h-48 space-y-0.5 overflow-y-auto rounded border border-gray-200 p-1">
-            {visibleCatchments.map((c) => (
-              <label key={c.catchment_id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={catchments.includes(c.catchment_id)}
-                  onChange={() => setCatchments((s) => toggle(s, c.catchment_id))}
-                />
-                <span className="truncate">
-                  {c.name} ({c.farm_count})
-                </span>
-              </label>
-            ))}
-            {visibleCatchments.length === 0 && (
-              <p className="px-1 py-2 text-xs text-gray-400">No matches</p>
-            )}
-          </div>
-        </div>
-      </div>
+      <FilterPanel
+        index={index}
+        waterBodyTypes={waterBodyTypes}
+        setWaterBodyTypes={setWaterBodyTypes}
+        riverBasinDistricts={riverBasinDistricts}
+        setRiverBasinDistricts={setRiverBasinDistricts}
+        catchments={catchments}
+        setCatchments={setCatchments}
+      />
     </div>
   );
 };

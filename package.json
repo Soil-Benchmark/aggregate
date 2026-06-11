@@ -10,7 +10,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@duckdb/node-api": "^1.5.3-r.3",
     "@turf/bbox": "^7.3.5",
     "@turf/boolean-point-in-polygon": "^7.3.5",
     "@turf/centroid": "^7.3.5",
