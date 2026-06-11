@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Waves, X } from "lucide-react";
+import { Info, Waves, X } from "lucide-react";
 import { WATER_BODY_COLORS, WATER_BODY_FALLBACK } from "./catchmentFilters";
 import type { FarmGroup, FarmsGeoJSON, Label } from "@/lib/farmData";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +68,8 @@ export const Map = ({
   const [visible, setVisible] = useState(false);
   // True once layers exist, so the visibility effect can toggle them.
   const [ready, setReady] = useState(false);
+  // The "about / why Aggregate" popover on the badge.
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // label name -> color, for tinting the panel tags like the search bar does.
   // (Plain object, not a Map — `Map` is this component's own name here.)
@@ -560,6 +562,16 @@ export const Map = ({
 
       {/* Aggregate badge — bottom-left. */}
       <div className="pointer-events-none absolute bottom-9 left-4 z-10 flex w-64 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+        <button
+          type="button"
+          onClick={() => setAboutOpen((v) => !v)}
+          aria-label="About Aggregate"
+          aria-expanded={aboutOpen}
+          className="pointer-events-auto absolute right-2 top-2 rounded-full p-1 text-white/40 transition hover:bg-white/10 hover:text-white/80"
+        >
+          <Info size={15} aria-hidden="true" />
+        </button>
+
         <div className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/bubbles-orange.svg" alt="" className="h-11 w-11 shrink-0" />
@@ -571,10 +583,67 @@ export const Map = ({
 
         <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
           <span className="text-xs text-white/70">Powered by</span>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto opacity-90" />
+          <a
+            href="https://soilbenchmark.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit Soil Benchmark (opens in a new tab)"
+            className="pointer-events-auto opacity-90 transition hover:opacity-100"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto" />
+          </a>
         </div>
+
       </div>
+
+      {/* About modal — centred, blurs the whole background while open. */}
+      {aboutOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setAboutOpen(false)}
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 p-6 backdrop-blur-sm"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-lg animate-[menu-pop_160ms_ease-out] rounded-2xl bg-slate-600/90 p-8 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-md"
+          >
+            <button
+              type="button"
+              onClick={() => setAboutOpen(false)}
+              aria-label="Close"
+              className="absolute right-3 top-3 rounded p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/bubbles-orange.svg" alt="" className="h-14 w-14 shrink-0" />
+              <h2 className="text-3xl font-bold tracking-tight text-slate-100/90">
+                Why Aggregate?
+              </h2>
+            </div>
+
+            <div className="mt-5 space-y-3.5 text-base leading-relaxed text-white/80">
+              <p>
+                Aggregate brings the farmer groups working to improve their soil
+                and water onto one shared map.
+              </p>
+              <p>
+                Search your area to find the group nearest you, then switch on
+                layers to see the river catchments and basins your land sits
+                within — the shared context behind every soil and water decision.
+              </p>
+              <p>
+                Knowing your neighbours and your landscape is where better,
+                collective stewardship of the soil begins.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
