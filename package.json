@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "build:data": "node scripts/build-data.mjs && npx mapshaper public/catchments.geojson -simplify 8% keep-shapes -o precision=0.00001 public/data/catchments.simplified.geojson",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@duckdb/node-api": "^1.5.3-r.3",
+    "@turf/bbox": "^7.3.5",
+    "@turf/boolean-point-in-polygon": "^7.3.5",
+    "@turf/centroid": "^7.3.5",
     "@radix-ui/react-slot": "^1.2.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

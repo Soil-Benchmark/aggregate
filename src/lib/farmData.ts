@@ -18,6 +18,7 @@ export type FarmProperties = {
   id: string;
   postcode: string;
   group_id: string;
+  river_basin_district: string | null;
 };
 
 export type FarmsGeoJSON = FeatureCollection<Polygon, FarmProperties>;
@@ -44,7 +45,7 @@ const json = async <T>(url: string): Promise<T> => {
  */
 export const loadFarmData = async (): Promise<FarmData> => {
   const [farms, rawGroups, groupLabels, labels] = await Promise.all([
-    json<FarmsGeoJSON>('/farms.geojson'),
+    json<FarmsGeoJSON>('/data/farms-by-district.geojson'),
     json<RawGroup[]>('/data/farm_groups.json'),
     json<RawGroupLabel[]>('/data/group_labels.json'),
     json<Label[]>('/data/labels.json'),
