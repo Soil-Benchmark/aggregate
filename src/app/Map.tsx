@@ -15,10 +15,11 @@ const INITIAL_ZOOM = 5;
 const FILL_LAYER_ID = "farms-fill";
 const LINE_LAYER_ID = "farms-line";
 
-// Base farm colours (unselected); a clicked group is highlighted in yellow.
+// Base farm colours (unselected); a clicked group is highlighted by darkening.
 const FARM_FILL = "#ff7a00";
 const FARM_LINE = "#ff9933";
-const HIGHLIGHT = "#FFFF00";
+const HIGHLIGHT_FILL = "#662b00";
+const HIGHLIGHT_LINE = "#803600";
 
 // Mapbox match expression: water_body_type -> colour.
 const waterBodyColor = [
@@ -154,13 +155,13 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
           map.setPaintProperty(FILL_LAYER_ID, "fill-color", [
             "case",
             ["==", ["get", "group_id"], groupId],
-            HIGHLIGHT,
+            HIGHLIGHT_FILL,
             FARM_FILL,
           ]);
           map.setPaintProperty(LINE_LAYER_ID, "line-color", [
             "case",
             ["==", ["get", "group_id"], groupId],
-            HIGHLIGHT,
+            HIGHLIGHT_LINE,
             FARM_LINE,
           ]);
           map.setPaintProperty(LINE_LAYER_ID, "line-width", [
