@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { MessageSquareQuote, Stamp, Waves } from 'lucide-react';
 import type { Label } from '@/lib/farmData';
 import type { Filter } from '@/lib/filters';
@@ -191,20 +191,18 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
   const categoryChipBase =
     'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition';
 
-  return (
-    <div
-      ref={containerRef}
-      onBlur={handleBlur}
-      onClick={focusInput}
-      className="absolute left-1/2 top-4 z-10 w-[min(92vw,720px)] -translate-x-1/2 cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl backdrop-blur-md"
-    >
-      {/* Input row: search icon, composing tags, applied pills, text input, clear */}
-      <div className="flex items-center gap-3">
-        <span className="shrink-0 text-white/90">
-          <SearchIcon />
-        </span>
+  // Order the category segments in the search text by when each filter type was
+  // first added (filters order), with the category being composed appended last.
+  const categoryOrder: Category[] = [];
+  for (const f of filters) {
+    if (!categoryOrder.includes(f.kind)) categoryOrder.push(f.kind);
+  }
+  if (category && !categoryOrder.includes(category)) categoryOrder.push(category);
 
-        <div className="flex flex-1 flex-wrap items-center gap-2">
+  const renderCategorySegment = (c: Category) => {
+    if (c === 'label') {
+      return (
+        <Fragment key="label">
           {(category === 'label' || appliedLabels.length > 0) && (
             <Badge className="gap-1.5 rounded-full border-transparent bg-emerald-200 px-3 py-1 text-sm font-semibold text-emerald-950">
               <Stamp size={14} aria-hidden="true" />
@@ -219,7 +217,6 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
               </button>
             </Badge>
           )}
-
           {appliedLabels.map((l) => (
             <Badge
               key={l.label}
@@ -235,9 +232,14 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
               </button>
             </Badge>
           ))}
+        </Fragment>
+      );
+    }
 
-          {/* "name" tag: while composing, the input below is its editor; when a
-              name filter is active but not composing, show its query statically. */}
+    if (c === 'name') {
+      // While composing, the input is the editor; otherwise show the query text.
+      return (
+        <Fragment key="name">
           {(composingName || hasNameFilter) && (
             <Badge className="gap-1.5 rounded-full border-transparent bg-white px-3 py-1 text-sm font-semibold text-slate-900">
               <MessageSquareQuote size={14} aria-hidden="true" />
@@ -261,39 +263,62 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
               {nameQuery}
             </button>
           )}
+        </Fragment>
+      );
+    }
 
-          {/* "river basin" tag, followed by the chosen districts as plain
-              text (same styling as the suggestions list), each with an ×. */}
-          {(category === 'catchment' || hasCatchmentFilter) && (
-            <Badge className="gap-1.5 rounded-full border-transparent bg-sky-200 px-3 py-1 text-sm font-semibold text-sky-950">
-              <Waves size={14} aria-hidden="true" />
-              river basin
-              <button
-                type="button"
-                onClick={removeCatchmentCategory}
-                aria-label="Remove river basin filter"
-                className="ml-0.5 rounded-full hover:bg-sky-950/10"
-              >
-                ×
-              </button>
-            </Badge>
-          )}
-
-          {appliedDistricts.map((d) => (
+    // catchment: "river basin" tag + chosen districts as plain text (same as
+    // the suggestions below), each with an ×.
+    return (
+      <Fragment key="catchment">
+        {(category === 'catchment' || hasCatchmentFilter) && (
+          <Badge className="gap-1.5 rounded-full border-transparent bg-sky-200 px-3 py-1 text-sm font-semibold text-sky-950">
+            <Waves size={14} aria-hidden="true" />
+            river basin
             <button
-              key={d}
               type="button"
-              onClick={() => toggleDistrict(d)}
-              aria-label={`Remove ${d}`}
-              className="flex items-center gap-1.5 text-lg font-semibold text-white transition hover:text-white/80"
+              onClick={removeCatchmentCategory}
+              aria-label="Remove river basin filter"
+              className="ml-0.5 rounded-full hover:bg-sky-950/10"
             >
-              <Waves size={18} aria-hidden="true" />
-              {d}
-              <span aria-hidden="true" className="opacity-80">
-                ×
-              </span>
+              ×
             </button>
-          ))}
+          </Badge>
+        )}
+        {appliedDistricts.map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => toggleDistrict(d)}
+            aria-label={`Remove ${d}`}
+            className="flex items-center gap-1.5 text-lg font-semibold text-white transition hover:text-white/80"
+          >
+            <Waves size={18} aria-hidden="true" />
+            {d}
+            <span aria-hidden="true" className="opacity-80">
+              ×
+            </span>
+          </button>
+        ))}
+      </Fragment>
+    );
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onBlur={handleBlur}
+      onClick={focusInput}
+      className="absolute left-1/2 top-4 z-10 w-[min(92vw,720px)] -translate-x-1/2 cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl backdrop-blur-md"
+    >
+      {/* Input row: search icon, composing tags, applied pills, text input, clear */}
+      <div className="flex items-center gap-3">
+        <span className="shrink-0 text-white/90">
+          <SearchIcon />
+        </span>
+
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          {categoryOrder.map(renderCategorySegment)}
 
           <input
             ref={inputRef}
