@@ -101,8 +101,8 @@ export const Map = ({
 
     (async () => {
       const [catchmentsData, districtsData] = await Promise.all([
-        fetch("/data/catchments.simplified.geojson").then((r) => r.json()),
-        fetch("/districts.geojson").then((r) => r.json()),
+        fetch("/data/catchments.geojson").then((r) => r.json()),
+        fetch("/data/districts.geojson").then((r) => r.json()),
       ]);
       if (cancelled || !mapContainer.current || mapRef.current) return;
 

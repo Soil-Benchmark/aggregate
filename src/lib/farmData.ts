@@ -1,4 +1,4 @@
-import type { FeatureCollection, Polygon } from 'geojson';
+import type { Feature, FeatureCollection, Polygon } from 'geojson';
 
 export type Label = {
   label: string;
@@ -23,6 +23,7 @@ export type FarmProperties = {
   catchment_name: string | null;
 };
 
+export type FarmFeature = Feature<Polygon, FarmProperties>;
 export type FarmsGeoJSON = FeatureCollection<Polygon, FarmProperties>;
 
 export type FarmData = {
@@ -32,9 +33,9 @@ export type FarmData = {
   districts: string[];
 };
 
-type RawGroup = Omit<FarmGroup, 'labels'>;
-type RawGroupLabel = { groupId: string; label: string };
-type RawFiltersIndex = { river_basin_districts: string[] };
+type DistrictsFC = {
+  features: { properties: { river_basin_district?: string } }[];
+};
 
 const json = async <T>(url: string): Promise<T> => {
   const res = await fetch(url);
@@ -43,30 +44,47 @@ const json = async <T>(url: string): Promise<T> => {
 };
 
 /**
- * Loads farm geometry (GeoJSON) and group/label metadata (JSON) from /public,
- * folding the group→label join into each group's `labels` array.
+ * Loads farm geometry (GeoJSON) and group metadata (JSON). Labels now live on
+ * each group (`group.labels`); `labels.json` is just the name→colour palette.
  * Runs in the browser.
  */
+type StoredData = { groups?: FarmGroup[]; farms?: FarmFeature[]; error?: string };
+
+/**
+ * The live dataset (groups + farms) is served from GCS via /api/data — GCS is
+ * required, there is no static fallback. The label palette and the river basin
+ * district list (derived from districts.geojson) are static reference data.
+ */
 export const loadFarmData = async (): Promise<FarmData> => {
-  const [farms, rawGroups, groupLabels, labels, filtersIndex] = await Promise.all([
-    json<FarmsGeoJSON>('/data/farms-by-district.geojson'),
-    json<RawGroup[]>('/data/farm_groups.json'),
-    json<RawGroupLabel[]>('/data/group_labels.json'),
+  const [labels, districtsFC, res] = await Promise.all([
     json<Label[]>('/data/labels.json'),
-    json<RawFiltersIndex>('/data/filters-index.json'),
+    json<DistrictsFC>('/data/districts.geojson'),
+    fetch('/api/data'),
   ]);
 
-  const labelsByGroup = new Map<string, string[]>();
-  for (const { groupId, label } of groupLabels) {
-    const existing = labelsByGroup.get(groupId);
-    if (existing) existing.push(label);
-    else labelsByGroup.set(groupId, [label]);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as StoredData;
+    throw new Error(body.error ?? `Failed to load data (${res.status})`);
   }
+  const stored = (await res.json()) as StoredData;
 
-  const groups: FarmGroup[] = rawGroups.map((g) => ({
+  const groups: FarmGroup[] = (stored.groups ?? []).map((g) => ({
     ...g,
-    labels: labelsByGroup.get(g.groupId) ?? [],
+    labels: g.labels ?? [],
   }));
 
-  return { groups, farms, labels, districts: filtersIndex.river_basin_districts };
+  const districts = [
+    ...new Set(
+      districtsFC.features
+        .map((f) => f.properties.river_basin_district)
+        .filter((d): d is string => Boolean(d)),
+    ),
+  ].sort();
+
+  return {
+    groups,
+    farms: { type: 'FeatureCollection', features: stored.farms ?? [] },
+    labels,
+    districts,
+  };
 };

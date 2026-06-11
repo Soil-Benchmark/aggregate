@@ -4,209 +4,342 @@
     "name": "The Furrow Fellowship",
     "description": "A tight-knit band of neighbouring farms ploughing the same direction, literally and figuratively.",
     "contactName": "Oliver Fairweather",
-    "contactEmail": "oliver.fairweather@thefurrowfellowship.example.co.uk"
+    "contactEmail": "oliver.fairweather@thefurrowfellowship.example.co.uk",
+    "labels": [
+      "Arable",
+      "Knowledge & Resource Sharing",
+      "Soil Health"
+    ]
   },
   {
     "groupId": "1bea1e6d-d8e2-4d53-98f6-87e052101074",
     "name": "Loam Rangers",
     "description": "Roaming the rich soils of the valley, these growers swap seed, advice and the occasional dad joke.",
     "contactName": "Amelia Barley",
-    "contactEmail": "amelia.barley@loamrangers.example.co.uk"
+    "contactEmail": "amelia.barley@loamrangers.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Knowledge & Resource Sharing",
+      "Regenerative Agriculture"
+    ]
   },
   {
     "groupId": "3bb0c4da-bdd4-47be-913f-c10e377b5d72",
     "name": "Hedgerow Collective",
     "description": "Stitching the landscape back together one hedge at a time.",
     "contactName": "George Hawthorn",
-    "contactEmail": "george.hawthorn@hedgerowcollective.example.co.uk"
+    "contactEmail": "george.hawthorn@hedgerowcollective.example.co.uk",
+    "labels": [
+      "Field Margins & Habitat Connectivity",
+      "Biodiversity",
+      "Conservation Grant Schemes"
+    ]
   },
   {
     "groupId": "3bd8b114-f504-4798-b91b-aaf4e4fbd4de",
     "name": "Topsoil Trust",
     "description": "Guardians of the good brown stuff. Where soil health comes first and nobody talks about tillage at dinner.",
     "contactName": "Isla Meadows",
-    "contactEmail": "isla.meadows@topsoiltrust.example.co.uk"
+    "contactEmail": "isla.meadows@topsoiltrust.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Regenerative Agriculture"
+    ]
   },
   {
     "groupId": "453d1020-6b08-4eab-bc4f-e10880f98f5b",
     "name": "Rhizobia Alliance",
     "description": "Nitrogen-fixing fanatics putting legumes to work across the cluster.",
     "contactName": "Harry Greenacre",
-    "contactEmail": "harry.greenacre@rhizobiaalliance.example.co.uk"
+    "contactEmail": "harry.greenacre@rhizobiaalliance.example.co.uk",
+    "labels": [
+      "Regenerative Agriculture",
+      "Soil Health"
+    ]
   },
   {
     "groupId": "60a73ad8-56fc-4c6a-942c-8d42700b5038",
     "name": "Cover Crop Co-op",
     "description": "If it covers the ground over winter, this lot are growing it.",
     "contactName": "Florence Pickering",
-    "contactEmail": "florence.pickering@covercropco-op.example.co.uk"
+    "contactEmail": "florence.pickering@covercropco-op.example.co.uk",
+    "labels": [
+      "Regenerative Agriculture",
+      "Soil Health",
+      "Knowledge & Resource Sharing"
+    ]
   },
   {
     "groupId": "6cb070a8-3c40-48b7-a594-97fec3894487",
     "name": "The Tilth Society",
     "description": "Devoted to the art of the perfect crumbly seedbed.",
     "contactName": "Arthur Whitlock",
-    "contactEmail": "arthur.whitlock@thetilthsociety.example.co.uk"
+    "contactEmail": "arthur.whitlock@thetilthsociety.example.co.uk",
+    "labels": [
+      "Soil Health"
+    ]
   },
   {
     "groupId": "79b6ee0b-f1e1-4e97-8270-4fc003a7d8dc",
     "name": "Bedrock Farmers' Group",
     "description": "Solid as the geology beneath them, this group has farmed these acres for generations.",
     "contactName": "Poppy Thornbury",
-    "contactEmail": "poppy.thornbury@bedrockfarmersgroup.example.co.uk"
+    "contactEmail": "poppy.thornbury@bedrockfarmersgroup.example.co.uk",
+    "labels": [
+      "Knowledge & Resource Sharing"
+    ]
   },
   {
     "groupId": "7a228e12-3372-49e0-8820-753ab5723f37",
     "name": "Mycelium Network",
     "description": "An underground network of farms sharing resources the way fungi share nutrients. Quietly connected, mutually thriving.",
     "contactName": "Jack Ashby",
-    "contactEmail": "jack.ashby@myceliumnetwork.example.co.uk"
+    "contactEmail": "jack.ashby@myceliumnetwork.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Knowledge & Resource Sharing",
+      "Regenerative Agriculture"
+    ]
   },
   {
     "groupId": "849cc9af-4d60-4284-bc1a-8a35d54c7661",
     "name": "Headland Habitat Group",
     "description": "Turning awkward field corners into thriving wildlife havens.",
     "contactName": "Daisy Rookwood",
-    "contactEmail": "daisy.rookwood@headlandhabitatgroup.example.co.uk"
+    "contactEmail": "daisy.rookwood@headlandhabitatgroup.example.co.uk",
+    "labels": [
+      "Field Margins & Habitat Connectivity",
+      "Biodiversity",
+      "Pollinators",
+      "Conservation Grant Schemes"
+    ]
   },
   {
     "groupId": "8a24e1d6-3fcd-4ab7-8c9b-faea6bdd4373",
     "name": "The Pasture Pact",
     "description": "A handshake agreement between graziers to keep the grass greener for everyone.",
     "contactName": "Henry Hedley",
-    "contactEmail": "henry.hedley@thepasturepact.example.co.uk"
+    "contactEmail": "henry.hedley@thepasturepact.example.co.uk",
+    "labels": [
+      "Livestock & Grazing"
+    ]
   },
   {
     "groupId": "8a834624-a5bb-410a-a8d8-d24863e2a408",
     "name": "Regolith Land Group",
     "description": "Working the weathered ground where rock slowly becomes soil, and patience is the main crop.",
     "contactName": "Ivy Cornwell",
-    "contactEmail": "ivy.cornwell@regolithlandgroup.example.co.uk"
+    "contactEmail": "ivy.cornwell@regolithlandgroup.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Livestock & Grazing"
+    ]
   },
   {
     "groupId": "97c036e3-0da2-4ee0-a282-91d63dbd9412",
     "name": "Brambleside Cluster",
     "description": "Tangled together for the better, much like the brambles they're named after.",
     "contactName": "Charlie Dunmore",
-    "contactEmail": "charlie.dunmore@bramblesidecluster.example.co.uk"
+    "contactEmail": "charlie.dunmore@bramblesidecluster.example.co.uk",
+    "labels": [
+      "Field Margins & Habitat Connectivity",
+      "Biodiversity"
+    ]
   },
   {
     "groupId": "9e6449fd-d980-4d4b-9ae4-8db27f5e18bd",
     "name": "The Stubble Syndicate",
     "description": "Champions of leaving a little something behind for the birds after harvest.",
     "contactName": "Freya Marsh",
-    "contactEmail": "freya.marsh@thestubblesyndicate.example.co.uk"
+    "contactEmail": "freya.marsh@thestubblesyndicate.example.co.uk",
+    "labels": [
+      "Regenerative Agriculture",
+      "Arable",
+      "Biodiversity"
+    ]
   },
   {
     "groupId": "a008d98b-f2c0-4ac7-ba48-7c9e4b7f6b48",
     "name": "Catchment Care Collective",
     "description": "Keeping the river clean from source to sea, one field margin at a time.",
     "contactName": "Thomas Birchall",
-    "contactEmail": "thomas.birchall@catchmentcarecollective.example.co.uk"
+    "contactEmail": "thomas.birchall@catchmentcarecollective.example.co.uk",
+    "labels": [
+      "Water & Catchment Management",
+      "Conservation Grant Schemes"
+    ]
   },
   {
     "groupId": "a033c86a-0f6d-4e14-bd3d-8868b2867314",
     "name": "Wold & Furrow Group",
     "description": "Rolling hills, deep furrows, and farmers who actually answer their phones.",
     "contactName": "Willow Garforth",
-    "contactEmail": "willow.garforth@woldandfurrowgroup.example.co.uk"
+    "contactEmail": "willow.garforth@woldandfurrowgroup.example.co.uk",
+    "labels": [
+      "Arable",
+      "Knowledge & Resource Sharing",
+      "Soil Health"
+    ]
   },
   {
     "groupId": "a09108de-6364-4e32-a2be-262ce0d3b66b",
     "name": "The Green Manure Guild",
     "description": "Feeding the soil so the soil feeds everyone else.",
     "contactName": "William Oakes",
-    "contactEmail": "william.oakes@thegreenmanureguild.example.co.uk"
+    "contactEmail": "william.oakes@thegreenmanureguild.example.co.uk",
+    "labels": [
+      "Regenerative Agriculture",
+      "Soil Health"
+    ]
   },
   {
     "groupId": "a7783195-830d-421c-96df-c588303c770b",
     "name": "Subsoil Stewards",
     "description": "The deep thinkers of the soil world, looking after what lies beneath.",
     "contactName": "Rosie Stratton",
-    "contactEmail": "rosie.stratton@subsoilstewards.example.co.uk"
+    "contactEmail": "rosie.stratton@subsoilstewards.example.co.uk",
+    "labels": [
+      "Soil Health"
+    ]
   },
   {
     "groupId": "af68fec4-7fdb-4246-bbf0-6067ace38189",
     "name": "Meadowsweet Alliance",
     "description": "Buzzing with pollinators and the occasional good idea.",
     "contactName": "James Penhallow",
-    "contactEmail": "james.penhallow@meadowsweetalliance.example.co.uk"
+    "contactEmail": "james.penhallow@meadowsweetalliance.example.co.uk",
+    "labels": [
+      "Pollinators",
+      "Biodiversity",
+      "Conservation Grant Schemes"
+    ]
   },
   {
     "groupId": "b148cd75-c32d-44e8-806e-85688ab1d059",
     "name": "The Clay & Loam Collective",
     "description": "Heavy ground, big hearts, and a shared love of a well-structured tilth.",
     "contactName": "Elsie Ferndale",
-    "contactEmail": "elsie.ferndale@theclayandloamcollective.example.co.uk"
+    "contactEmail": "elsie.ferndale@theclayandloamcollective.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Knowledge & Resource Sharing"
+    ]
   },
   {
     "groupId": "cb77a7b6-9cf0-4a11-b659-cda47f2a0cbc",
     "name": "Wildflower Margin Group",
     "description": "Every margin a corridor, every corridor alive with something winged.",
     "contactName": "Edward Bramley",
-    "contactEmail": "edward.bramley@wildflowermargingroup.example.co.uk"
+    "contactEmail": "edward.bramley@wildflowermargingroup.example.co.uk",
+    "labels": [
+      "Field Margins & Habitat Connectivity",
+      "Pollinators",
+      "Biodiversity",
+      "Conservation Grant Schemes"
+    ]
   },
   {
     "groupId": "cc94d8f7-66af-4ed5-ac46-42b640648e8a",
     "name": "The Aggregate Assembly",
     "description": "Strength in numbers, structure in soil. This assembly does both rather well.",
     "contactName": "Maud Wexford",
-    "contactEmail": "maud.wexford@theaggregateassembly.example.co.uk"
+    "contactEmail": "maud.wexford@theaggregateassembly.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Knowledge & Resource Sharing"
+    ]
   },
   {
     "groupId": "d464e159-9c3c-4dd3-ac96-4f6b6ce6a241",
     "name": "Crumb Structure Co-op",
     "description": "Obsessed with what holds a good soil together, and a good community too.",
     "contactName": "Alfie Holloway",
-    "contactEmail": "alfie.holloway@crumbstructureco-op.example.co.uk"
+    "contactEmail": "alfie.holloway@crumbstructureco-op.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Knowledge & Resource Sharing"
+    ]
   },
   {
     "groupId": "dccc074a-fb77-427b-bb72-8b017ca09618",
     "name": "Heathland Farmers' Forum",
     "description": "Hardy farmers on hungry ground, making the most of every acre.",
     "contactName": "Beatrice Sefton",
-    "contactEmail": "beatrice.sefton@heathlandfarmersforum.example.co.uk"
+    "contactEmail": "beatrice.sefton@heathlandfarmersforum.example.co.uk",
+    "labels": [
+      "Biodiversity",
+      "Livestock & Grazing",
+      "Conservation Grant Schemes"
+    ]
   },
   {
     "groupId": "e0454012-1295-46e6-b208-52cac7018f1f",
     "name": "The Ploughshare Partnership",
     "description": "Old tools, new ideas, and a partnership built to last.",
     "contactName": "Reuben Crabtree",
-    "contactEmail": "reuben.crabtree@theploughsharepartnership.example.co.uk"
+    "contactEmail": "reuben.crabtree@theploughsharepartnership.example.co.uk",
+    "labels": [
+      "Knowledge & Resource Sharing"
+    ]
   },
   {
     "groupId": "e20625b4-ebe0-478a-a825-d3d10301dfad",
     "name": "Watershed Wardens",
     "description": "Watching over every drop that flows through the catchment.",
     "contactName": "Martha Aldridge",
-    "contactEmail": "martha.aldridge@watershedwardens.example.co.uk"
+    "contactEmail": "martha.aldridge@watershedwardens.example.co.uk",
+    "labels": [
+      "Water & Catchment Management",
+      "Conservation Grant Schemes"
+    ]
   },
   {
     "groupId": "e54a5321-7fcc-4788-be08-0b155cf09bdf",
     "name": "The Silt Society",
     "description": "Fine particles, finer company. The gentlest soil and the chattiest meetings.",
     "contactName": "Frederick Mossop",
-    "contactEmail": "frederick.mossop@thesiltsociety.example.co.uk"
+    "contactEmail": "frederick.mossop@thesiltsociety.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Water & Catchment Management",
+      "Knowledge & Resource Sharing"
+    ]
   },
   {
     "groupId": "e8167295-d7f4-4671-913e-f90e96ce8190",
     "name": "Beetle Bank Brigade",
     "description": "Building little wild ridges across the fields so the beetles have somewhere to overwinter.",
     "contactName": "Nancy Renshaw",
-    "contactEmail": "nancy.renshaw@beetlebankbrigade.example.co.uk"
+    "contactEmail": "nancy.renshaw@beetlebankbrigade.example.co.uk",
+    "labels": [
+      "Field Margins & Habitat Connectivity",
+      "Arable",
+      "Biodiversity",
+      "Conservation Grant Schemes"
+    ]
   },
   {
     "groupId": "f4284e39-e56b-48d7-9087-c1abebec366f",
     "name": "The Humus Hub",
     "description": "The central meeting point for all things rich, dark and organic.",
     "contactName": "Sidney Tindall",
-    "contactEmail": "sidney.tindall@thehumushub.example.co.uk"
+    "contactEmail": "sidney.tindall@thehumushub.example.co.uk",
+    "labels": [
+      "Soil Health",
+      "Regenerative Agriculture"
+    ]
   },
   {
     "groupId": "fceea007-3092-4ffe-98fc-ee9a5d2641c9",
     "name": "Field Margin Federation",
     "description": "United by the unsung edges of the field, where farming and nature shake hands.",
     "contactName": "Hettie Yarwood",
-    "contactEmail": "hettie.yarwood@fieldmarginfederation.example.co.uk"
+    "contactEmail": "hettie.yarwood@fieldmarginfederation.example.co.uk",
+    "labels": [
+      "Field Margins & Habitat Connectivity",
+      "Biodiversity",
+      "Pollinators",
+      "Conservation Grant Schemes"
+    ]
   }
 ]

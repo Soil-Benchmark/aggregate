@@ -1,10 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Layers, Waves } from 'lucide-react';
+import { Check, Layers, Plus, Waves } from 'lucide-react';
 import { Map, type LayerVisibility } from './Map';
 import { SearchBar } from './SearchBar';
-import { loadFarmData, type FarmData } from '@/lib/farmData';
+import { AddDialog } from './AddDialog';
+import {
+  loadFarmData,
+  type FarmData,
+  type FarmFeature,
+  type FarmGroup,
+} from '@/lib/farmData';
 import { applyFilters, type Filter } from '@/lib/filters';
 import { cn } from '@/lib/utils';
 
@@ -25,10 +31,23 @@ export const MapView = () => {
   const [data, setData] = useState<FarmData>(EMPTY_DATA);
   const [filters, setFilters] = useState<Filter[]>([]);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [layers, setLayers] = useState<LayerVisibility>({
     catchments: false,
     basins: false,
   });
+
+  const handleGroupAdded = (group: FarmGroup) =>
+    setData((prev) => ({ ...prev, groups: [...prev.groups, group] }));
+
+  const handleFarmAdded = (farm: FarmFeature) =>
+    setData((prev) => ({
+      ...prev,
+      farms: {
+        type: 'FeatureCollection',
+        features: [...prev.farms.features, farm],
+      },
+    }));
 
   useEffect(() => {
     let active = true;
@@ -158,7 +177,26 @@ export const MapView = () => {
             </div>
           )}
         </div>
+
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          aria-label="Add a farm or group"
+          className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-slate-500/80 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md transition hover:bg-slate-500"
+        >
+          <Plus size={24} aria-hidden="true" />
+        </button>
       </div>
+
+      {addOpen && (
+        <AddDialog
+          groups={data.groups}
+          labels={data.labels}
+          onClose={() => setAddOpen(false)}
+          onGroupAdded={handleGroupAdded}
+          onFarmAdded={handleFarmAdded}
+        />
+      )}
     </>
   );
 };
