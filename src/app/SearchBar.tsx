@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Stamp } from 'lucide-react';
+import { MessageSquareQuote, Stamp } from 'lucide-react';
 import type { Label } from '@/lib/farmData';
 import type { Filter } from '@/lib/filters';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ type SearchBarProps = {
 };
 
 /** Filter category the user is composing in the input. */
-type Category = 'label';
+type Category = 'label' | 'name';
 
 /** Returns black or white depending on which reads better on `hex`. */
 const readableText = (hex: string): string => {
@@ -58,6 +58,10 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     .map((f) => labelsByName.get(f.label))
     .filter((l): l is Label => l !== undefined);
 
+  const hasNameFilter = filters.some((f) => f.kind === 'name');
+  // Committed group-name query (empty when no name filter is active).
+  const nameQuery = filters.flatMap((f) => (f.kind === 'name' ? [f.query] : []))[0] ?? '';
+
   const focusInput = () => inputRef.current?.focus();
 
   const toggleLabel = (label: string) => {
@@ -72,7 +76,9 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
 
   const startCategory = (next: Category) => {
     setCategory(next);
-    setQuery('');
+    // Resume the existing name query when re-entering "name"; otherwise the
+    // text is just a palette filter and starts empty.
+    setQuery(next === 'name' ? nameQuery : '');
     focusInput();
   };
 
@@ -82,10 +88,25 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     setQuery('');
   };
 
+  // Free text is the group-name filter while composing "name"; keep it in sync.
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    if (category === 'name') {
+      const others = filters.filter((f) => f.kind !== 'name');
+      onChange(value.trim() ? [...others, { kind: 'name', query: value }] : others);
+    }
+  };
+
   // Deleting the "has label" tag also removes the label filters it represents.
   const removeLabelCategory = () => {
     onChange(filters.filter((f) => f.kind !== 'label'));
-    clearComposing();
+    if (category === 'label') clearComposing();
+  };
+
+  // Deleting the "name" tag removes the group-name filter.
+  const removeNameCategory = () => {
+    onChange(filters.filter((f) => f.kind !== 'name'));
+    if (category === 'name') clearComposing();
   };
 
   const clearAll = () => {
@@ -94,13 +115,17 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     setFocused(false);
   };
 
-  // Collapse when focus leaves the whole bar. Keep the "has label" tag if it
-  // produced active filters; only drop it when it was an empty/abandoned click.
+  // Collapse when focus leaves the whole bar. Keep a composing tag if it
+  // produced an active filter; only drop it when it was an empty/abandoned click.
   const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     if (containerRef.current?.contains(e.relatedTarget as Node)) return;
     setFocused(false);
-    if (appliedLabels.length === 0) clearComposing();
-    else setQuery('');
+    if (category === 'name') {
+      if (!hasNameFilter) clearComposing();
+    } else if (category === 'label') {
+      if (appliedLabels.length > 0) setQuery('');
+      else clearComposing();
+    }
   };
 
   // Labels offered in the palette, narrowed by the free text after "has label".
@@ -110,14 +135,18 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
       ? labels.filter((l) => l.label.toLowerCase().includes(q))
       : [];
 
+  const composingName = category === 'name';
   const isPristine =
-    !focused && category === null && query === '' && appliedLabels.length === 0;
+    !focused && category === null && query === '' && filters.length === 0;
   const showPlaceholder =
-    category === null && query === '' && appliedLabels.length === 0;
-  // When collapsed with chips present, the empty text input would wrap onto a
-  // second row — shrink it to zero so the bar stays a single row.
+    category === null && query === '' && filters.length === 0;
+  // When collapsed with chips present and no free text to show, the empty input
+  // would wrap onto a second row — shrink it so the bar stays a single row.
   const collapsedWithChips =
-    !focused && (appliedLabels.length > 0 || category !== null);
+    !focused && query === '' && (filters.length > 0 || category !== null);
+
+  const categoryChipBase =
+    'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition';
 
   return (
     <div
@@ -133,7 +162,7 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
         </span>
 
         <div className="flex flex-1 flex-wrap items-center gap-2">
-          {category === 'label' && (
+          {(category === 'label' || appliedLabels.length > 0) && (
             <Badge className="gap-1.5 rounded-full border-transparent bg-emerald-200 px-3 py-1 text-sm font-semibold text-emerald-950">
               <Stamp size={14} aria-hidden="true" />
               has label
@@ -164,17 +193,45 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
             </Badge>
           ))}
 
+          {/* "name" tag: while composing, the input below is its editor; when a
+              name filter is active but not composing, show its query statically. */}
+          {(composingName || hasNameFilter) && (
+            <Badge className="gap-1.5 rounded-full border-transparent bg-white px-3 py-1 text-sm font-semibold text-slate-900">
+              <MessageSquareQuote size={14} aria-hidden="true" />
+              name
+              <button
+                type="button"
+                onClick={removeNameCategory}
+                aria-label="Remove name filter"
+                className="ml-0.5 rounded-full hover:bg-slate-900/10"
+              >
+                ×
+              </button>
+            </Badge>
+          )}
+          {!composingName && hasNameFilter && (
+            <button
+              type="button"
+              onClick={() => startCategory('name')}
+              className="text-lg text-white/90 hover:text-white"
+            >
+              {nameQuery}
+            </button>
+          )}
+
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleQueryChange(e.target.value)}
             onFocus={() => setFocused(true)}
             placeholder={
-              showPlaceholder
-                ? focused
-                  ? 'Search for farms by distance, area, labels and more'
-                  : 'Search Aggregate'
-                : ''
+              composingName
+                ? 'Search group names'
+                : showPlaceholder
+                  ? focused
+                    ? 'Search for farms by distance, area, labels and more'
+                    : 'Search Aggregate'
+                  : ''
             }
             className={cn(
               'bg-transparent text-lg outline-none placeholder:text-white/70',
@@ -195,16 +252,32 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
         )}
       </div>
 
-      {/* Category chips: shown when focused and not yet composing a category */}
-      {focused && category === null && (
+      {/* Category chips: shown while focused, the active one highlighted */}
+      {focused && (
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => startCategory('label')}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-200/90 px-3 py-1.5 text-sm font-medium text-emerald-950 transition hover:bg-emerald-200"
+            className={cn(
+              categoryChipBase,
+              'bg-emerald-200/90 text-emerald-950 hover:bg-emerald-200',
+              category === 'label' && 'ring-2 ring-white',
+            )}
           >
             <Stamp size={16} aria-hidden="true" />
             has label
+          </button>
+          <button
+            type="button"
+            onClick={() => startCategory('name')}
+            className={cn(
+              categoryChipBase,
+              'bg-white/90 text-slate-900 hover:bg-white',
+              category === 'name' && 'ring-2 ring-white',
+            )}
+          >
+            <MessageSquareQuote size={16} aria-hidden="true" />
+            name
           </button>
         </div>
       )}
