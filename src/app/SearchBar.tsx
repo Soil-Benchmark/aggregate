@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { MessageSquareQuote, Stamp, Waves } from 'lucide-react';
 import type { Label } from '@/lib/farmData';
 import type { Filter } from '@/lib/filters';
@@ -46,6 +46,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
   const [category, setCategory] = useState<Category | null>(null);
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const activeLabels = new Set(
@@ -69,7 +70,16 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
   );
   const hasCatchmentFilter = appliedDistricts.length > 0;
 
-  const focusInput = () => inputRef.current?.focus();
+  const focusInput = () => {
+    (category === 'name' ? nameInputRef : inputRef).current?.focus();
+  };
+
+  // Focus the right input when the composing category changes (the inline name
+  // input vs the shared palette-filter input at the end).
+  useEffect(() => {
+    if (!category) return;
+    (category === 'name' ? nameInputRef : inputRef).current?.focus();
+  }, [category]);
 
   const toggleLabel = (label: string) => {
     if (activeLabels.has(label)) {
@@ -95,10 +105,10 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
 
   const startCategory = (next: Category) => {
     setCategory(next);
-    // Resume the existing name query when re-entering "name"; otherwise the
-    // text is just a palette/suggestion filter and starts empty.
-    setQuery(next === 'name' ? nameQuery : '');
-    focusInput();
+    // The shared input is a palette/suggestion filter; it always starts empty.
+    // (The name value lives in its own inline input.) Focus is handled by the
+    // category effect above.
+    setQuery('');
   };
 
   // Drop the in-progress composing state, keeping applied filters.
@@ -107,12 +117,17 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     setQuery('');
   };
 
-  // Free text is the group-name filter while composing "name"; keep it in sync.
-  const handleQueryChange = (value: string) => {
-    setQuery(value);
-    if (category === 'name') {
-      const others = filters.filter((f) => f.kind !== 'name');
-      onChange(value.trim() ? [...others, { kind: 'name', query: value }] : others);
+  // The group-name filter is edited via its own inline input. Update it in place
+  // so it keeps its position in the filter order (don't drop & re-append).
+  const setNameQuery = (value: string) => {
+    if (!value.trim()) {
+      onChange(filters.filter((f) => f.kind !== 'name'));
+    } else if (filters.some((f) => f.kind === 'name')) {
+      onChange(
+        filters.map((f) => (f.kind === 'name' ? { kind: 'name', query: value } : f)),
+      );
+    } else {
+      onChange([...filters, { kind: 'name', query: value }]);
     }
   };
 
@@ -167,7 +182,6 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       ? districts.filter((d) => d.toLowerCase().includes(q))
       : [];
 
-  const composingName = category === 'name';
   const isPristine =
     !focused && category === null && query === '' && filters.length === 0;
   const showPlaceholder =
@@ -178,15 +192,13 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     !focused && query === '' && (filters.length > 0 || category !== null);
 
   const placeholder =
-    category === 'name'
-      ? 'Search group names'
-      : category === 'catchment'
-        ? 'Search for catchment areas or choose below'
-        : showPlaceholder
-          ? focused
-            ? 'Search for farms by distance, area, labels and more'
-            : 'Search Aggregate'
-          : '';
+    category === 'catchment'
+      ? 'Search for catchment areas or choose below'
+      : showPlaceholder
+        ? focused
+          ? 'Search for farms by distance, area, labels and more'
+          : 'Search Aggregate'
+        : '';
 
   const categoryChipBase =
     'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition';
@@ -237,32 +249,33 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     }
 
     if (c === 'name') {
-      // While composing, the input is the editor; otherwise show the query text.
+      // The "name" tag plus an inline input editing the group-name value in
+      // place (so it stays where it is, regardless of other filters).
       return (
         <Fragment key="name">
-          {(composingName || hasNameFilter) && (
-            <Badge className="gap-1.5 rounded-full border-transparent bg-white px-3 py-1 text-sm font-semibold text-slate-900">
-              <MessageSquareQuote size={14} aria-hidden="true" />
-              name
-              <button
-                type="button"
-                onClick={removeNameCategory}
-                aria-label="Remove name filter"
-                className="ml-0.5 rounded-full hover:bg-slate-900/10"
-              >
-                ×
-              </button>
-            </Badge>
-          )}
-          {!composingName && hasNameFilter && (
+          <Badge className="gap-1.5 rounded-full border-transparent bg-white px-3 py-1 text-sm font-semibold text-slate-900">
+            <MessageSquareQuote size={14} aria-hidden="true" />
+            name
             <button
               type="button"
-              onClick={() => startCategory('name')}
-              className="text-lg text-white/90 hover:text-white"
+              onClick={removeNameCategory}
+              aria-label="Remove name filter"
+              className="ml-0.5 rounded-full hover:bg-slate-900/10"
             >
-              {nameQuery}
+              ×
             </button>
-          )}
+          </Badge>
+          <input
+            ref={nameInputRef}
+            value={nameQuery}
+            size={Math.max(nameQuery.length + 1, 4)}
+            onChange={(e) => setNameQuery(e.target.value)}
+            onFocus={() => setFocused(true)}
+            // Enter name mode only on a real click here, not on programmatic
+            // focus — otherwise focusing it would override other chip clicks.
+            onMouseDown={() => setCategory('name')}
+            className="bg-transparent text-lg text-white outline-none"
+          />
         </Fragment>
       );
     }
@@ -320,17 +333,22 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
         <div className="flex flex-1 flex-wrap items-center gap-2">
           {categoryOrder.map(renderCategorySegment)}
 
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            onFocus={() => setFocused(true)}
-            placeholder={placeholder}
-            className={cn(
-              'bg-transparent text-lg outline-none placeholder:text-white/70',
-              collapsedWithChips ? 'w-0 min-w-0 flex-none p-0' : 'min-w-32 flex-1',
-            )}
-          />
+          {/* Shared input: palette/suggestion filter for label & catchment, and
+              the general search field. The name value uses its own inline input,
+              so this one is hidden while composing "name". */}
+          {category !== 'name' && (
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setFocused(true)}
+              placeholder={placeholder}
+              className={cn(
+                'bg-transparent text-lg outline-none placeholder:text-white/70',
+                collapsedWithChips ? 'w-0 min-w-0 flex-none p-0' : 'min-w-32 flex-1',
+              )}
+            />
+          )}
         </div>
 
         {!isPristine && (
@@ -350,6 +368,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => startCategory('label')}
             className={cn(
               categoryChipBase,
@@ -362,6 +381,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
           </button>
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => startCategory('name')}
             className={cn(
               categoryChipBase,
@@ -374,6 +394,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
           </button>
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => startCategory('catchment')}
             className={cn(
               categoryChipBase,
