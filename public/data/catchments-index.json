@@ -1,0 +1,1338 @@
+{
+  "water_body_types": [
+    "Coastal Water",
+    "Groundwater Body",
+    "Lake",
+    "River",
+    "Transitional Water"
+  ],
+  "river_basin_districts": [
+    "Anglian",
+    "Dee",
+    "Humber",
+    "North West",
+    "Northumbria",
+    "Severn",
+    "Solway Tweed",
+    "South East",
+    "South West",
+    "Thames"
+  ],
+  "catchments": [
+    {
+      "catchment_id": "GB105033042820",
+      "name": "Alconbury Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105035046060",
+      "name": "Alde",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043015790",
+      "name": "Allen (Headwaters)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043011090",
+      "name": "Allen (Lower)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039030300",
+      "name": "Ampney and Poulton Brooks (Source to Thames)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104029061850",
+      "name": "Ancholme from Source to Bishopbridge",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB104028046460",
+      "name": "Anker from River Sence to River Tame",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB107042022610",
+      "name": "Arle",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106038040100",
+      "name": "Ash (from Meesden to confluence with Bury Green Brook)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068060440",
+      "name": "Ash Brook (Source to Darley Brook)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068055190",
+      "name": "Audlem Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054044403",
+      "name": "Avon conf Workman Br, Evesham to conf R Severn",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054044401",
+      "name": "Avon- Tramway Br Stratford to Workman Br Evesham",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054055140",
+      "name": "Bailey Bk - source to conf R Tern",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105030062290",
+      "name": "Barlings Eau",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045210",
+      "name": "Barnwell Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104029067605",
+      "name": "Barrow Beck",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105036040710",
+      "name": "Belchamp Brook",
+      "farm_count": 8
+    },
+    {
+      "catchment_id": "GB105032050330",
+      "name": "Billing Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105035040150",
+      "name": "Black Ditch (East Suffolk)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB104029061890",
+      "name": "Black Dyke (trib of Ancholme)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB107042016810",
+      "name": "Blackwater",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028046491",
+      "name": "Blithe - Tad Bk to R Trent",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB105030062380",
+      "name": "Boultham Catchwater Drain",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028042481",
+      "name": "Bourne - source to R Tame",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043022390",
+      "name": "Bourne (Hampshire Avon)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050020040",
+      "name": "Bradiford Water",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050020060",
+      "name": "Bradwell Stream",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030056770",
+      "name": "Brant - Lower",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050019910",
+      "name": "Bray (Mole to Hole Water)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB109054044690",
+      "name": "Breach Bk - source to conf R Sowe",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105031050595",
+      "name": "Brook Drain (including Marholm Brook)",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB105033037930",
+      "name": "Broughton Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062440",
+      "name": "Bucknall Catchwater",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050014170",
+      "name": "Bullow Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105036040910",
+      "name": "Bumpstead Brook",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105034055750",
+      "name": "Burn",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105029061630",
+      "name": "Burwell Beck",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105033042720",
+      "name": "Burwell Lode",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105035040190",
+      "name": "Butley River",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104029061920",
+      "name": "Caistor Canal Catchment (trib of Ancholme)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033042750",
+      "name": "Cam",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105037033840",
+      "name": "Can",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030056235",
+      "name": "Car Dyke North and Delph System",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028046690",
+      "name": "Carlton Brook from Source to River Sence",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054039851",
+      "name": "Carrant Bk - source to conf R Avon",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB40702G500900",
+      "name": "Central Hants Bracklesham Group",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028053050",
+      "name": "Chatcull Brook from Source to Meece Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068055240",
+      "name": "Checkley Brook - Lower",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068055230",
+      "name": "Checkley Brook - Upper",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050019920",
+      "name": "Chelfham Stream",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105037033530",
+      "name": "Chelmer (d/s confluence with Can)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105037033950",
+      "name": "Chelmer (Gt. Easton - R. Can)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033038040",
+      "name": "Chicheley Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043022560",
+      "name": "Chitterne Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054043900",
+      "name": "Clifton Bk - source to conf R Avon",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106038033190",
+      "name": "Cobbins Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105037041290",
+      "name": "Colne (u/s Gt. Yeldham)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039023360",
+      "name": "Cow Common Brook and Portobello Ditch",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030051560",
+      "name": "Cringle Brook - Upper",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB205033000040",
+      "name": "Cut-off Channel",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050014650",
+      "name": "Dalch",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068060450",
+      "name": "Darley Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105035046310",
+      "name": "Deben (Brandeston Bridge - Melton)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039037190",
+      "name": "Deddington Brook (Source to Cherwell)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB107042022770",
+      "name": "Dever",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB108044010130",
+      "name": "Devils Brook",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB105030056175",
+      "name": "Dorrington Dike",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068055160",
+      "name": "Duckow",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105033043260",
+      "name": "Duloe Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105031055480",
+      "name": "East Glen River",
+      "farm_count": 4
+    },
+    {
+      "catchment_id": "GB108043015830",
+      "name": "Ebble",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043015870",
+      "name": "Ebble (Upper)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054050230",
+      "name": "Ellerton Bk - source to conf R Meese",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033042830",
+      "name": "Ellington Brook (Trib)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB40503G000400",
+      "name": "Essex Gravels",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043022430",
+      "name": "Etchilhampton Water",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105031050550",
+      "name": "Eye Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB40501G401800",
+      "name": "Felixstowe Peninsula Crag & Chalk",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054044470",
+      "name": "Finham Bk - source to conf Canley Bk",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033037650",
+      "name": "Flit tributary",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB108043016080",
+      "name": "Fontmell Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068060400",
+      "name": "Forge (Kidd) Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068055400",
+      "name": "Fowle Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054032470",
+      "name": "Frome - source to Ebley Mill",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108044009692",
+      "name": "Frome Dorset (Lower) d/s Louds Mill Dorchester",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108044009691",
+      "name": "Frome Dorset (Lower) u/s Louds Mill Dorchester",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105035040330",
+      "name": "Fynn",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB106039030130",
+      "name": "Gallos Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105035046280",
+      "name": "Gipping (d/s Stowmarket)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105036040970",
+      "name": "Glem - Lower",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105031050720",
+      "name": "Glen",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062250",
+      "name": "Goltho Beck",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028053410",
+      "name": "Greet Catchment (trib of Trent)",
+      "farm_count": 4
+    },
+    {
+      "catchment_id": "GB105032045040",
+      "name": "Grendon Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045330",
+      "name": "Grendon Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105031050610",
+      "name": "Gwash",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB104026072790",
+      "name": "Gypsey Race from Source to North Sea",
+      "farm_count": 4
+    },
+    {
+      "catchment_id": "GB108043022410",
+      "name": "Hampshire Avon (East) and Woodborough Stream",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043022370",
+      "name": "Hampshire Avon (West)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045230",
+      "name": "Harpers Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028064330",
+      "name": "Hatfield Waste Drain Catchment (trib of Torne/Three Rivers)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050014520",
+      "name": "Hawkridge Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104029061930",
+      "name": "Hibaldstow area Catchment (trib of Ancholme)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104026066841",
+      "name": "High Hunsley to Arram Area",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045120",
+      "name": "Hog Dyke",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045440",
+      "name": "Holdenby Arm of Spratton Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105037077810",
+      "name": "Holland Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030056750",
+      "name": "Honington Beck",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108044009800",
+      "name": "Hooke",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028058091",
+      "name": "Idle from Maun/Poulter to Tiln",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028058092",
+      "name": "Idle from Tiln to  Ryton",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045140",
+      "name": "Ise - Lower",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045200",
+      "name": "Ise - Upper",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB107042022580",
+      "name": "Itchen",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB107042016670",
+      "name": "Itchen (Cheriton Stream)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033037720",
+      "name": "Ivel (US Henlow)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050008290",
+      "name": "Knighty Brook",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB108050020020",
+      "name": "Knowl Water",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105033043270",
+      "name": "Kym",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033042980",
+      "name": "Kym (and Til)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039023220",
+      "name": "Lambourn (Source to Newbury)",
+      "farm_count": 4
+    },
+    {
+      "catchment_id": "GB104028047481",
+      "name": "Langham Brook from Whissendine Brook to Eye",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050014460",
+      "name": "Langham Lake",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105031045620",
+      "name": "Langton Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105035040360",
+      "name": "Lark",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039030040",
+      "name": "Leach (Source to Thames)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054044140",
+      "name": "Leam - conf R Itchen to conf R Avon",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062340",
+      "name": "Legsby (Lissington) Beck",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB109055036720",
+      "name": "Little Lugg - source to conf R Lugg",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033043100",
+      "name": "Little Ouse (Hopton Common to Sapiston Confl)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050014100",
+      "name": "Little Silver Stream",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB109054055130",
+      "name": "Loggerheads Bk - source to conf R Tern",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054055080",
+      "name": "Lonco Bk - source to conf R Meese",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050020010",
+      "name": "Lower Caen",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050019990",
+      "name": "Lower River Yeo (Barnstaple)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109055036790",
+      "name": "Lugg - conf R Arrow to conf R Wye",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062430",
+      "name": "Lymn / Steeping",
+      "farm_count": 5
+    },
+    {
+      "catchment_id": "GB112068055260",
+      "name": "Marbury Brook",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB109053022050",
+      "name": "Marden - source to conf Cowage Bk",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028046570",
+      "name": "Mease from Gilwiskaw Bk to Hooborough Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028046560",
+      "name": "Mease from Hooborough Brook to Trent",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB104028053010",
+      "name": "Meece Brook from Chatcull Brook to R Sow",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054050190",
+      "name": "Meese - Aqualate Mere tributaries",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054050200",
+      "name": "Meese - Outflow Aqualate Mere to conf R Ter",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB107042016640",
+      "name": "Meon",
+      "farm_count": 4
+    },
+    {
+      "catchment_id": "GB106039023174",
+      "name": "Middle Kennet (Hungerford to Newbury)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033037820",
+      "name": "Millbridge and Potton Brooks",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050014110",
+      "name": "Mole (Bray to Yeo)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB108050014380",
+      "name": "Mole (Taw to Bray)",
+      "farm_count": 4
+    },
+    {
+      "catchment_id": "GB107042016310",
+      "name": "Monks Brook",
+      "farm_count": 5
+    },
+    {
+      "catchment_id": "GB108043022470",
+      "name": "Nadder (Middle)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032050383",
+      "name": "Nene - conf Ise to Islip",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045310",
+      "name": "Nene - headwaters to conf Whilton Branch",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032050381",
+      "name": "Nene - Islip to tidal",
+      "farm_count": 4
+    },
+    {
+      "catchment_id": "GB105031050500",
+      "name": "North Brook (Welland)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043015990",
+      "name": "North Winterbourne",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB107042022730",
+      "name": "Nun's Walk Stream",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033037971",
+      "name": "Ouzel US Caldecote Mill",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039023300",
+      "name": "Pang",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105037041180",
+      "name": "Pant",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028047121",
+      "name": "Penk - Whiston Bk to R Sow",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB112068060390",
+      "name": "Peover Eye",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033042960",
+      "name": "Pertenhall Brook",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB108044010120",
+      "name": "Piddle (Upper)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028047250",
+      "name": "Pyford Brook Catchment (trib of Trent)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028047450",
+      "name": "Queniborough Brook Catchment (trib of Wreake)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054044150",
+      "name": "Rains Bk - source to conf R Leam",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105036040830",
+      "name": "Ramsey River",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB40802G801000",
+      "name": "River Taw and North Devon Streams",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062411",
+      "name": "River Till",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054049190",
+      "name": "Roden - conf Sleap Bk to conf R Tern",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB109054049180",
+      "name": "Roden - conf unnamed trib to conf Sleap Bk",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028058380",
+      "name": "Ruddle (Paper Mill Dyke) from Source to Torne",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050019940",
+      "name": "Rye Stream",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105037041320",
+      "name": "Salary Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030056160",
+      "name": "Sand Beck",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033043280",
+      "name": "Sapiston",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028046740",
+      "name": "Saredon Brook from Source to River Penk",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028053220",
+      "name": "Scotch Brook Catchment (trib of Trent)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028046650",
+      "name": "Sence from Source to Burton Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054044620",
+      "name": "Sherbourne - source to conf R Sowe",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039030460",
+      "name": "Sherbourne Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB107042016450",
+      "name": "Sherfield English Stream",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062390",
+      "name": "Skellingthorpe Main Drain",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039037440",
+      "name": "Slade Barn Stream (Source to Windrush)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030056670",
+      "name": "Slea",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028046880",
+      "name": "Soar from Thurlaston Brook to Sence",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105035040310",
+      "name": "Somersham Watercourse",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054049201",
+      "name": "Soulton Bk - source to conf R Roden",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108044010060",
+      "name": "South Winterbourne",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028047220",
+      "name": "Sow - Brockton Bk to Doxey Bk",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062221",
+      "name": "Stainfield Beck",
+      "farm_count": 4
+    },
+    {
+      "catchment_id": "GB105037041280",
+      "name": "Stambourne Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105034055840",
+      "name": "Stiffkey",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB104028046640",
+      "name": "Stoke Golding Brook from Source to R Sence",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105032045270",
+      "name": "Stonepit Dyke",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105031050460",
+      "name": "Stonton Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106038040130",
+      "name": "Stort (at Clavering)",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB108043022490",
+      "name": "Stour (Headwaters)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043016052",
+      "name": "Stour (Middle d/s Pimperne Brook)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105036040980",
+      "name": "Stour (u/s Wixoe)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054039860",
+      "name": "Stour (Warks) - source to conf Nethercote Bk",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105033047810",
+      "name": "Stringside Stream",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050013990",
+      "name": "Sturcombe River",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105036040890",
+      "name": "Stutton Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109053022220",
+      "name": "Summerham Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028047400",
+      "name": "Swarbourn Catcment (trib of Trent)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB109054043940",
+      "name": "Swift source to conf Avon",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB106039023700",
+      "name": "Swill Brook (source to Ashton Keynes)",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB108044009660",
+      "name": "Tadnoll Brook (including Empool Bottom)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB104028047050",
+      "name": "Tame from River Anker to River Trent",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB108043016070",
+      "name": "Tarrant",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105034051230",
+      "name": "Tas (Tasburgh to R. Yare)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105034055870",
+      "name": "Tat",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB108050014530",
+      "name": "Taw (River Mole to Estuary)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050008250",
+      "name": "Taw (Source to Bullow Brook)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB109054055090",
+      "name": "Tern - conf Bailey Bk to conf R Meese",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB109054055150",
+      "name": "Tern - source to conf Loggerheads Bk",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB107042022700",
+      "name": "Test - Bourne Rivulet to conf Dever",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB107042022710",
+      "name": "Test (Upper)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB106039030331",
+      "name": "Thames Wallingford to Caversham",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028046940",
+      "name": "Thurlaston Brook Catchment (trib of Soar)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105033038180",
+      "name": "Tove (DS Greens Norton)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028047290",
+      "name": "Trent from Moreton Brook to River Tame",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB104028053272",
+      "name": "Trent from Tittensor to River Sow",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105030062301",
+      "name": "Upper Bain",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB108050020050",
+      "name": "Upper Caen",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB107042016280",
+      "name": "Upper Hamble",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039023171",
+      "name": "Upper Kennet to Marlborough",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050013980",
+      "name": "Upper Little Dart River",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050019960",
+      "name": "Upper River Yeo (Barnstaple)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050014620",
+      "name": "Venn",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB112068060370",
+      "name": "Wade Brook",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB104029062100",
+      "name": "Waithe Beck lower catchment (to Tetney Lock)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB107042022650",
+      "name": "Wallop Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062200",
+      "name": "Waring",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105034045903",
+      "name": "Waveney (Ellingham Mill - Burgh St. Peter)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB40501G400600",
+      "name": "Waveney and East Suffolk Chalk &  Crag",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB112068055300",
+      "name": "Weaver (Source to Marbury Brook)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105031050580",
+      "name": "Welland - conf Langton Bk to conf Gwash",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105031045630",
+      "name": "Welland - headwaters to conf Jordan",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB104026067080",
+      "name": "West Beck Upper",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105031050770",
+      "name": "West Glen - conf West Glen trib to conf East Glen River",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062341",
+      "name": "West Torrington Beck",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB112068055440",
+      "name": "Wettenhall Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068055380",
+      "name": "Wheelock (Fowle Brook to Dane)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB112068055420",
+      "name": "Wheelock (including Hassall Brook)",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB105032050290",
+      "name": "Willow Brook (Nene)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB106039030480",
+      "name": "Windrush (Slade Barn Stream to Dikler)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB106039030440",
+      "name": "Windrush and tributaries (Little Rissington to Thames)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB106039023210",
+      "name": "Winterbourne",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB105033047890",
+      "name": "Wissey - Upper",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030062370",
+      "name": "Witham - conf Brant to conf Catchwater Drain",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB205030062425",
+      "name": "Witham - conf Catchwater Drain to conf Bain",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030051570",
+      "name": "Witham - headwaters to conf Cringle Bk",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB109054044640",
+      "name": "Withy Bk - source to conf R Sowe",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108044009610",
+      "name": "Wraxall Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108043022520",
+      "name": "Wylye (Headwaters)",
+      "farm_count": 2
+    },
+    {
+      "catchment_id": "GB108043022550",
+      "name": "Wylye (Middle)",
+      "farm_count": 3
+    },
+    {
+      "catchment_id": "GB108043022530",
+      "name": "Wylye Trib (Heytesbury Stream)",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB105030051580",
+      "name": "Wyville Brook",
+      "farm_count": 1
+    },
+    {
+      "catchment_id": "GB108050014140",
+      "name": "Yeo (Molland)",
+      "farm_count": 1
+    }
+  ]
+}
