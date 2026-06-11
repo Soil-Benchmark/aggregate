@@ -184,8 +184,8 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
           }
           if (!bounds.isEmpty()) {
             map.fitBounds(bounds, {
-              // Extra left padding so the cluster isn't hidden behind the panel.
-              padding: { top: 60, bottom: 60, left: 360, right: 60 },
+              // Extra right padding so the cluster isn't hidden behind the panel.
+              padding: { top: 60, bottom: 60, left: 60, right: 360 },
               maxZoom: 14,
               duration: 800,
             });
@@ -253,16 +253,16 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
         }`}
       />
 
-      {/* Group details panel (top-left). The catchment FilterPanel was moved
-          into the search bar as the "river basin" filter. */}
-      <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 flex-col gap-2.5">
+      {/* Bottom-right column: the group details box (on farm click) sits just
+          above the Aggregate card, in a matching translucent style. */}
+      <div className="absolute bottom-9 right-4 z-10 flex w-64 flex-col gap-2.5">
         {selectedGroup && (
-          <div className="relative shrink-0 rounded-lg bg-white/95 p-4 shadow-lg backdrop-blur-sm">
+          <div className="pointer-events-auto relative max-h-[60vh] overflow-y-auto rounded-2xl bg-white/90 px-4 py-3 text-gray-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
             <button
               type="button"
               onClick={clearSelection}
               aria-label="Close group details"
-              className="absolute right-3 top-3 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+              className="absolute right-2.5 top-2.5 rounded p-1 text-gray-400 hover:bg-gray-900/10 hover:text-gray-700"
             >
               <X size={16} />
             </button>
@@ -277,27 +277,27 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
               </p>
             )}
 
-            <dl className="mt-3 space-y-1 text-sm">
+            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
               {selectedGroup.contactName && (
-                <div className="flex gap-2">
-                  <dt className="font-medium text-gray-700">Contact</dt>
-                  <dd className="text-gray-600 wrap-break-word">
+                <>
+                  <dt className="font-medium text-gray-500">Contact</dt>
+                  <dd className="min-w-0 text-gray-700 wrap-break-word">
                     {selectedGroup.contactName}
                   </dd>
-                </div>
+                </>
               )}
               {selectedGroup.contactEmail && (
-                <div className="flex gap-2">
-                  <dt className="font-medium text-gray-700">Email</dt>
+                <>
+                  <dt className="font-medium text-gray-500">Email</dt>
                   <dd className="min-w-0">
                     <a
                       href={`mailto:${selectedGroup.contactEmail}`}
-                      className="text-blue-600 hover:underline break-all"
+                      className="text-orange-600 hover:underline break-all"
                     >
                       {selectedGroup.contactEmail}
                     </a>
                   </dd>
-                </div>
+                </>
               )}
             </dl>
 
@@ -326,22 +326,22 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
             )}
           </div>
         )}
-      </div>
 
-      <div className="pointer-events-none absolute bottom-9 right-4 z-10 flex w-64 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
-        <div className="flex items-center gap-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/bubbles-orange.svg" alt="" className="h-11 w-11 shrink-0" />
-          <div className="leading-tight">
-            <h1 className="text-xl font-bold tracking-tight text-slate-100/90">Aggregate</h1>
-            <p className="text-xs text-white/70">Discover your local farm group</p>
+        <div className="pointer-events-none flex flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+          <div className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/bubbles-orange.svg" alt="" className="h-11 w-11 shrink-0" />
+            <div className="leading-tight">
+              <h1 className="text-xl font-bold tracking-tight text-slate-100/90">Aggregate</h1>
+              <p className="text-xs text-white/70">Discover your local farm group</p>
+            </div>
           </div>
-        </div>
 
-        <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
-          <span className="text-xs text-white/70">Powered by</span>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto opacity-90" />
+          <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
+            <span className="text-xs text-white/70">Powered by</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto opacity-90" />
+          </div>
         </div>
       </div>
     </div>

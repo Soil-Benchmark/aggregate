@@ -35,12 +35,22 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif !important;
 }
 
-/* Compact group-name label shown while hovering a farm. */
+/* Compact group-name label shown while hovering a farm. White translucent
+   pill to match the click-to-open group details card. */
 .farm-hover-popup .mapboxgl-popup-content {
-  padding: 4px 8px;
+  padding: 5px 11px;
   font-size: 12px;
   font-weight: 600;
-  color: #1a1a1a;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  color: #111827; /* gray-900 */
+  background: rgb(255 255 255 / 0.9);
+  border: 1px solid rgb(0 0 0 / 0.05);
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Hide the default arrow — a clean floating pill complements the design. */
+.farm-hover-popup .mapboxgl-popup-tip {
+  display: none;
 }

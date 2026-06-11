@@ -185,7 +185,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       ? 'Search for river basin districts or choose below'
       : showPlaceholder
         ? focused
-          ? 'Search for farms by distance, area, labels and more'
+          ? 'Search for farm groups by name, labels and more'
           : 'Search Aggregate'
         : '';
 
