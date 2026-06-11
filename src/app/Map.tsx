@@ -572,7 +572,7 @@ export const Map = ({
       {/* Aggregate badge — bottom-left. Hidden on mobile while a details card
           is open so the two don't overlap. */}
       <div
-        className={`pointer-events-none absolute bottom-9 left-4 z-10 w-64 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md ${
+        className={`pointer-events-none absolute bottom-9 left-1/2 z-10 w-64 -translate-x-1/2 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md sm:left-4 sm:translate-x-0 ${
           selectedGroup && selectedShown ? "hidden sm:flex" : "flex"
         }`}
       >
