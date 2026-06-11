@@ -22,13 +22,13 @@ const description =
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Aggregate — Discover your local farm group",
+    default: "Aggregate by Soil Benchmark",
     template: "%s · Aggregate",
   },
   description,
   applicationName: "Aggregate",
   openGraph: {
-    title: "Aggregate",
+    title: "Aggregate by Soil Benchmark",
     description,
     siteName: "Aggregate",
     url: "/",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aggregate",
+    title: "Aggregate by Soil Benchmark",
     description,
   },
 };
