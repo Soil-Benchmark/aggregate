@@ -60,6 +60,7 @@ export const Map = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const loadedRef = useRef(false);
+  const didFitRef = useRef(false);
   const farmsRef = useRef<FarmsGeoJSON>(farms);
   const groupsRef = useRef<FarmGroup[]>(groups);
   const [selectedGroup, setSelectedGroup] = useState<FarmGroup | null>(null);
@@ -284,6 +285,7 @@ export const Map = ({
       mapRef.current?.remove();
       mapRef.current = null;
       loadedRef.current = false;
+      didFitRef.current = false;
     };
   }, []);
 
@@ -294,6 +296,23 @@ export const Map = ({
     const source = map.getSource("farms") as mapboxgl.GeoJSONSource | undefined;
     source?.setData(farms);
   }, [farms]);
+
+  // On first load, fit the view to all farms (instant, so the splash reveals an
+  // already-framed map). Runs once; later filtering won't re-frame the map.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || didFitRef.current || farms.features.length === 0) return;
+    const bounds = new mapboxgl.LngLatBounds();
+    for (const f of farms.features) {
+      for (const ring of f.geometry.coordinates) {
+        for (const coord of ring) bounds.extend(coord as [number, number]);
+      }
+    }
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds, { padding: 60, duration: 0 });
+      didFitRef.current = true;
+    }
+  }, [farms, ready]);
 
   // Toggle catchment / river-basin layer visibility from the layers panel.
   useEffect(() => {
