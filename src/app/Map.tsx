@@ -1,38 +1,66 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { WATER_BODY_COLORS, WATER_BODY_FALLBACK } from './catchmentFilters';
-import type { FarmGroup, FarmsGeoJSON } from '@/lib/farmData';
+import { useEffect, useMemo, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { X } from "lucide-react";
+import { WATER_BODY_COLORS, WATER_BODY_FALLBACK } from "./catchmentFilters";
+import type { FarmGroup, FarmsGeoJSON, Label } from "@/lib/farmData";
+import { Badge } from "@/components/ui/badge";
+import { readableText } from "@/lib/utils";
 
 const INITIAL_CENTER: [number, number] = [-1.5491, 53.8008];
 const INITIAL_ZOOM = 5;
 
+const FILL_LAYER_ID = "farms-fill";
+const LINE_LAYER_ID = "farms-line";
+
+// Base farm colours (unselected); a clicked group is highlighted in yellow.
+const FARM_FILL = "#ff7a00";
+const FARM_LINE = "#ff9933";
+const HIGHLIGHT = "#FFFF00";
+
 // Mapbox match expression: water_body_type -> colour.
 const waterBodyColor = [
-  'match',
-  ['get', 'water_body_type'],
+  "match",
+  ["get", "water_body_type"],
   ...Object.entries(WATER_BODY_COLORS).flatMap(([type, color]) => [type, color]),
   WATER_BODY_FALLBACK,
 ] as mapboxgl.ExpressionSpecification;
 
-const escapeHtml = (value: string) =>
-  value.replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!),
-  );
-
 type MapProps = {
   farms: FarmsGeoJSON;
   groups: FarmGroup[];
+  labels: Label[];
 };
 
-export const Map = ({ farms, groups }: MapProps) => {
+export const Map = ({ farms, groups, labels }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const loadedRef = useRef(false);
   const farmsRef = useRef<FarmsGeoJSON>(farms);
   const groupsRef = useRef<FarmGroup[]>(groups);
+  const [selectedGroup, setSelectedGroup] = useState<FarmGroup | null>(null);
+  // Fade the map in once it has actually painted, to avoid a blank/white flash.
+  const [visible, setVisible] = useState(false);
+
+  // label name -> color, for tinting the panel tags like the search bar does.
+  // (Plain object, not a Map — `Map` is this component's own name here.)
+  const labelColors = useMemo(
+    () => Object.fromEntries(labels.map((l) => [l.label, l.color])),
+    [labels]
+  );
+
+  // Reset the highlight paint + close the details panel.
+  const clearSelection = () => {
+    const map = mapRef.current;
+    if (map && loadedRef.current) {
+      map.setPaintProperty(FILL_LAYER_ID, "fill-color", FARM_FILL);
+      map.setPaintProperty(LINE_LAYER_ID, "line-color", FARM_LINE);
+      map.setPaintProperty(LINE_LAYER_ID, "line-width", 1);
+    }
+    setSelectedGroup(null);
+  };
 
   // Keep the latest data in refs so the one-time `load`/click handlers can read it.
   useEffect(() => {
@@ -46,15 +74,17 @@ export const Map = ({ farms, groups }: MapProps) => {
 
     (async () => {
       const catchmentsData = await fetch(
-        '/data/catchments.simplified.geojson',
+        "/data/catchments.simplified.geojson",
       ).then((r) => r.json());
       if (cancelled || !mapContainer.current || mapRef.current) return;
 
-      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
       const map = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
+        style: "mapbox://styles/mapbox/standard",
+        // Apply faded/dusk before the first paint to avoid a day-time flash.
+        config: { basemap: { theme: "faded" } },
         center: INITIAL_CENTER,
         zoom: INITIAL_ZOOM,
         antialias: true,
@@ -63,66 +93,138 @@ export const Map = ({ farms, groups }: MapProps) => {
 
       const resizeObserver = new ResizeObserver(() => map.resize());
       resizeObserver.observe(mapContainer.current);
-      map.once('remove', () => resizeObserver.disconnect());
+      map.once("remove", () => resizeObserver.disconnect());
 
-      map.on('load', () => {
+      // Small label following the cursor with the hovered farm's group name.
+      const hoverPopup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 12,
+        className: "farm-hover-popup",
+      });
+
+      map.on("load", () => {
         // Catchments underneath, coloured by water body type. Hidden for now —
         // a future layers panel can flip `visibility` to 'visible' to toggle them.
-        map.addSource('catchments', { type: 'geojson', data: catchmentsData });
+        map.addSource("catchments", { type: "geojson", data: catchmentsData });
         map.addLayer({
-          id: 'catchments-fill',
-          type: 'fill',
-          source: 'catchments',
-          layout: { visibility: 'none' },
-          paint: { 'fill-color': waterBodyColor, 'fill-opacity': 0.3 },
+          id: "catchments-fill",
+          type: "fill",
+          source: "catchments",
+          layout: { visibility: "none" },
+          paint: { "fill-color": waterBodyColor, "fill-opacity": 0.3 },
         });
         map.addLayer({
-          id: 'catchments-line',
-          type: 'line',
-          source: 'catchments',
-          layout: { visibility: 'none' },
-          paint: { 'line-color': waterBodyColor, 'line-width': 0.8 },
+          id: "catchments-line",
+          type: "line",
+          source: "catchments",
+          layout: { visibility: "none" },
+          paint: { "line-color": waterBodyColor, "line-width": 0.8 },
         });
 
         // Farms on top (data comes from props; updated via setData below).
-        map.addSource('farms', { type: 'geojson', data: farmsRef.current });
+        map.addSource("farms", { type: "geojson", data: farmsRef.current });
         map.addLayer({
-          id: 'farms-fill',
-          type: 'fill',
-          source: 'farms',
-          paint: { 'fill-color': '#f97316', 'fill-opacity': 0.7 },
+          id: FILL_LAYER_ID,
+          type: "fill",
+          source: "farms",
+          paint: { "fill-color": FARM_FILL, "fill-opacity": 0.85 },
         });
         map.addLayer({
-          id: 'farms-line',
-          type: 'line',
-          source: 'farms',
-          paint: { 'line-color': '#c2410c', 'line-width': 1 },
+          id: LINE_LAYER_ID,
+          type: "line",
+          source: "farms",
+          paint: { "line-color": FARM_LINE, "line-width": 1 },
         });
 
         loadedRef.current = true;
 
-        // Clicking a farm shows its group's contact details.
-        map.on('click', 'farms-fill', (e) => {
+        // Clicking a farm highlights its whole group, zooms to the cluster, and
+        // opens the details panel.
+        map.on("click", FILL_LAYER_ID, (e) => {
           const feature = e.features?.[0];
           if (!feature) return;
-          const props = feature.properties as { postcode?: string; group_id?: string };
-          const group = groupsRef.current.find((g) => g.groupId === props.group_id);
-          const html = `
-            <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4;">
-              <strong>${escapeHtml(group?.name ?? 'Unknown group')}</strong><br/>
-              ${props.postcode ? `${escapeHtml(props.postcode)}<br/>` : ''}
-              ${group?.contactName ? `${escapeHtml(group.contactName)}<br/>` : ''}
-              ${group?.contactEmail ? `<a href="mailto:${escapeHtml(group.contactEmail)}">${escapeHtml(group.contactEmail)}</a>` : ''}
-            </div>`;
-          new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+          const props = feature.properties as {
+            postcode?: string;
+            group_id?: string;
+          };
+          const groupId = props.group_id ?? "";
+
+          // Highlight all farms in the clicked group in a single repaint.
+          map.setPaintProperty(FILL_LAYER_ID, "fill-color", [
+            "case",
+            ["==", ["get", "group_id"], groupId],
+            HIGHLIGHT,
+            FARM_FILL,
+          ]);
+          map.setPaintProperty(LINE_LAYER_ID, "line-color", [
+            "case",
+            ["==", ["get", "group_id"], groupId],
+            HIGHLIGHT,
+            FARM_LINE,
+          ]);
+          map.setPaintProperty(LINE_LAYER_ID, "line-width", [
+            "case",
+            ["==", ["get", "group_id"], groupId],
+            3,
+            1,
+          ]);
+
+          // Zoom to the bounding box of all farms in the clicked group.
+          const groupFeatures = farmsRef.current.features.filter(
+            (f) => f.properties.group_id === props.group_id
+          );
+          const bounds = new mapboxgl.LngLatBounds();
+          for (const f of groupFeatures) {
+            for (const ring of f.geometry.coordinates) {
+              for (const coord of ring) {
+                bounds.extend(coord as [number, number]);
+              }
+            }
+          }
+          if (!bounds.isEmpty()) {
+            map.fitBounds(bounds, {
+              // Extra left padding so the cluster isn't hidden behind the panel.
+              padding: { top: 60, bottom: 60, left: 360, right: 60 },
+              maxZoom: 14,
+              duration: 800,
+            });
+          }
+
+          // Surface the group's details into the floating panel.
+          const group = groupsRef.current.find(
+            (g) => g.groupId === props.group_id
+          );
+          setSelectedGroup(group ?? null);
         });
 
-        map.on('mouseenter', 'farms-fill', () => {
-          map.getCanvas().style.cursor = 'pointer';
+        // Clicking the map away from any farm clears the selection.
+        map.on("click", (e) => {
+          const hit = map.queryRenderedFeatures(e.point, {
+            layers: [FILL_LAYER_ID],
+          });
+          if (hit.length === 0) clearSelection();
         });
-        map.on('mouseleave', 'farms-fill', () => {
-          map.getCanvas().style.cursor = '';
+
+        map.on("mousemove", FILL_LAYER_ID, (e) => {
+          map.getCanvas().style.cursor = "pointer";
+          const f = e.features?.[0];
+          if (!f) return;
+          const gid = (f.properties as { group_id?: string }).group_id;
+          const group = groupsRef.current.find((g) => g.groupId === gid);
+          // setText (not setHTML) so group names can't inject markup.
+          hoverPopup
+            .setLngLat(e.lngLat)
+            .setText(group?.name ?? "Unknown group")
+            .addTo(map);
         });
+        map.on("mouseleave", FILL_LAYER_ID, () => {
+          map.getCanvas().style.cursor = "";
+          hoverPopup.remove();
+        });
+
+        // Reveal only once the first frame with data has rendered.
+        map.once("idle", () => setVisible(true));
       });
     })();
 
@@ -138,19 +240,109 @@ export const Map = ({ farms, groups }: MapProps) => {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
-    const source = map.getSource('farms') as mapboxgl.GeoJSONSource | undefined;
+    const source = map.getSource("farms") as mapboxgl.GeoJSONSource | undefined;
     source?.setData(farms);
   }, [farms]);
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainer} className="w-full h-full" />
-      <div className="pointer-events-none absolute bottom-4 right-4 z-10 flex flex-col items-end gap-1.5 rounded-xl bg-white/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
-        <span className="self-start text-[10px] font-medium uppercase tracking-wider text-gray-500">
-          Powered by
-        </span>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sb-logo.png" alt="SoilBenchmark" className="h-8 w-auto" />
+    <div className="relative w-full h-full bg-[#23263a]">
+      <div
+        ref={mapContainer}
+        className={`w-full h-full transition-opacity duration-700 ease-out ${
+          visible ? "opacity-100" : "opacity-0"
+        }`}
+      />
+
+      {/* Group details panel (top-left). The catchment FilterPanel was moved
+          into the search bar as the "river basin" filter. */}
+      <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 flex-col gap-2.5">
+        {selectedGroup && (
+          <div className="relative shrink-0 rounded-lg bg-white/95 p-4 shadow-lg backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={clearSelection}
+              aria-label="Close group details"
+              className="absolute right-3 top-3 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+            >
+              <X size={16} />
+            </button>
+
+            <h2 className="pr-6 text-base font-semibold text-gray-900 wrap-break-word">
+              {selectedGroup.name}
+            </h2>
+
+            {selectedGroup.description && (
+              <p className="mt-1 text-sm text-gray-600 wrap-break-word">
+                {selectedGroup.description}
+              </p>
+            )}
+
+            <dl className="mt-3 space-y-1 text-sm">
+              {selectedGroup.contactName && (
+                <div className="flex gap-2">
+                  <dt className="font-medium text-gray-700">Contact</dt>
+                  <dd className="text-gray-600 wrap-break-word">
+                    {selectedGroup.contactName}
+                  </dd>
+                </div>
+              )}
+              {selectedGroup.contactEmail && (
+                <div className="flex gap-2">
+                  <dt className="font-medium text-gray-700">Email</dt>
+                  <dd className="min-w-0">
+                    <a
+                      href={`mailto:${selectedGroup.contactEmail}`}
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {selectedGroup.contactEmail}
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            {selectedGroup.labels.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {selectedGroup.labels.map((label) => {
+                  const color = labelColors[label];
+                  return (
+                    <Badge
+                      key={label}
+                      className="rounded-full border-transparent px-3 py-1 text-xs font-semibold"
+                      style={
+                        color
+                          ? {
+                              backgroundColor: color,
+                              color: readableText(color),
+                            }
+                          : undefined
+                      }
+                    >
+                      {label}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="pointer-events-none absolute bottom-9 right-4 z-10 flex w-64 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/bubbles-orange.svg" alt="" className="h-11 w-11 shrink-0" />
+          <div className="leading-tight">
+            <h1 className="text-xl font-bold tracking-tight text-slate-100/90">Aggregate</h1>
+            <p className="text-xs text-white/70">Discover your local farm group</p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
+          <span className="text-xs text-white/70">Powered by</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto opacity-90" />
+        </div>
       </div>
     </div>
   );

@@ -70,7 +70,7 @@ export const FilterPanel = ({
   setFarmDistricts,
 }: FilterPanelProps) => {
   return (
-    <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 flex-col gap-4 overflow-y-auto rounded-lg bg-white/95 p-4 text-sm text-gray-800 shadow-lg">
+    <div className="flex min-h-0 flex-col gap-4 overflow-y-auto rounded-lg bg-white/95 p-4 text-sm text-gray-800 shadow-lg">
       <div className="space-y-3">
         <p className="font-semibold text-gray-900">Catchments</p>
         <CheckboxGroup

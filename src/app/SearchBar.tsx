@@ -5,7 +5,7 @@ import { MessageSquareQuote, Stamp, Waves } from 'lucide-react';
 import type { Label } from '@/lib/farmData';
 import type { Filter } from '@/lib/filters';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, readableText } from '@/lib/utils';
 
 type SearchBarProps = {
   labels: Label[];
@@ -16,17 +16,6 @@ type SearchBarProps = {
 
 /** Filter category the user is composing in the input. */
 type Category = 'label' | 'name' | 'riverBasin';
-
-/** Returns black or white depending on which reads better on `hex`. */
-const readableText = (hex: string): string => {
-  const n = hex.replace('#', '');
-  const r = parseInt(n.slice(0, 2), 16);
-  const g = parseInt(n.slice(2, 4), 16);
-  const b = parseInt(n.slice(4, 6), 16);
-  // Perceived luminance (sRGB).
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
-};
 
 const SearchIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">

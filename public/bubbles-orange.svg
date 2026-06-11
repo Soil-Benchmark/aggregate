@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="205" height="205" fill="none">
+  <!-- Large bubbles -->
+  <circle cx="300" cy="465" r="180" fill="#ff7a00" stroke="#ff9933" stroke-width="20"/>
+  <circle cx="790" cy="420" r="115" fill="#ff7a00" stroke="#ff9933" stroke-width="20"/>
+  <circle cx="695" cy="805" r="170" fill="#ff7a00" stroke="#ff9933" stroke-width="20"/>
+  <circle cx="335" cy="815" r="85" fill="#ff7a00" stroke="#ff9933" stroke-width="20"/>
+  <circle cx="590" cy="125" r="88" fill="#ff7a00" stroke="#ff9933" stroke-width="20"/>
+
+  <!-- Small dots -->
+  <circle cx="385" cy="175" r="24" fill="#ff7a00" stroke="#ff9933" stroke-width="14"/>
+  <circle cx="572" cy="320" r="24" fill="#ff7a00" stroke="#ff9933" stroke-width="14"/>
+  <circle cx="592" cy="543" r="24" fill="#ff7a00" stroke="#ff9933" stroke-width="14"/>
+  <circle cx="172" cy="720" r="24" fill="#ff7a00" stroke="#ff9933" stroke-width="14"/>
+  <circle cx="448" cy="955" r="24" fill="#ff7a00" stroke="#ff9933" stroke-width="14"/>
+</svg>
