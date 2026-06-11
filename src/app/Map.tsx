@@ -70,7 +70,7 @@ export const Map = ({ farms, groups }: MapProps) => {
 
       const map = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        style: 'mapbox://styles/mapbox/light-v11',
         center: INITIAL_CENTER,
         zoom: INITIAL_ZOOM,
         antialias: true,
@@ -191,6 +191,13 @@ export const Map = ({ farms, groups }: MapProps) => {
         farmDistricts={farmDistricts}
         setFarmDistricts={setFarmDistricts}
       />
+      <div className="pointer-events-none absolute bottom-4 right-4 z-10 flex flex-col items-end gap-1.5 rounded-xl bg-white/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+        <span className="self-start text-[10px] font-medium uppercase tracking-wider text-gray-500">
+          Powered by
+        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/sb-logo.png" alt="SoilBenchmark" className="h-8 w-auto" />
+      </div>
     </div>
   );
 };
