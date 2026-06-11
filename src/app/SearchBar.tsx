@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { MessageSquareQuote, Stamp } from 'lucide-react';
+import { MessageSquareQuote, Stamp, Waves } from 'lucide-react';
 import type { Label } from '@/lib/farmData';
 import type { Filter } from '@/lib/filters';
 import { Badge } from '@/components/ui/badge';
@@ -9,12 +9,13 @@ import { cn } from '@/lib/utils';
 
 type SearchBarProps = {
   labels: Label[];
+  districts: string[];
   filters: Filter[];
   onChange: (filters: Filter[]) => void;
 };
 
 /** Filter category the user is composing in the input. */
-type Category = 'label' | 'name';
+type Category = 'label' | 'name' | 'catchment';
 
 /** Returns black or white depending on which reads better on `hex`. */
 const readableText = (hex: string): string => {
@@ -40,7 +41,7 @@ const CloseIcon = () => (
   </svg>
 );
 
-export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
+export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarProps) => {
   const [focused, setFocused] = useState(false);
   const [category, setCategory] = useState<Category | null>(null);
   const [query, setQuery] = useState('');
@@ -62,6 +63,12 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
   // Committed group-name query (empty when no name filter is active).
   const nameQuery = filters.flatMap((f) => (f.kind === 'name' ? [f.query] : []))[0] ?? '';
 
+  // River basin districts the user has selected (selection order preserved).
+  const appliedDistricts = filters.flatMap((f) =>
+    f.kind === 'catchment' ? [f.district] : [],
+  );
+  const hasCatchmentFilter = appliedDistricts.length > 0;
+
   const focusInput = () => inputRef.current?.focus();
 
   const toggleLabel = (label: string) => {
@@ -74,10 +81,22 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     focusInput();
   };
 
+  const toggleDistrict = (district: string) => {
+    if (appliedDistricts.includes(district)) {
+      onChange(
+        filters.filter((f) => !(f.kind === 'catchment' && f.district === district)),
+      );
+    } else {
+      onChange([...filters, { kind: 'catchment', district }]);
+    }
+    setQuery('');
+    focusInput();
+  };
+
   const startCategory = (next: Category) => {
     setCategory(next);
     // Resume the existing name query when re-entering "name"; otherwise the
-    // text is just a palette filter and starts empty.
+    // text is just a palette/suggestion filter and starts empty.
     setQuery(next === 'name' ? nameQuery : '');
     focusInput();
   };
@@ -109,6 +128,12 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     if (category === 'name') clearComposing();
   };
 
+  // Deleting the "catchment" tag removes all river basin district filters.
+  const removeCatchmentCategory = () => {
+    onChange(filters.filter((f) => f.kind !== 'catchment'));
+    if (category === 'catchment') clearComposing();
+  };
+
   const clearAll = () => {
     onChange([]);
     clearComposing();
@@ -125,14 +150,21 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     } else if (category === 'label') {
       if (appliedLabels.length > 0) setQuery('');
       else clearComposing();
+    } else if (category === 'catchment') {
+      if (hasCatchmentFilter) setQuery('');
+      else clearComposing();
     }
   };
 
-  // Labels offered in the palette, narrowed by the free text after "has label".
+  // Options offered in the palette, narrowed by the free text after the tag.
   const q = query.trim().toLowerCase();
   const visibleLabels =
     category === 'label'
       ? labels.filter((l) => l.label.toLowerCase().includes(q))
+      : [];
+  const visibleDistricts =
+    category === 'catchment'
+      ? districts.filter((d) => d.toLowerCase().includes(q))
       : [];
 
   const composingName = category === 'name';
@@ -145,6 +177,17 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
   const collapsedWithChips =
     !focused && query === '' && (filters.length > 0 || category !== null);
 
+  const placeholder =
+    category === 'name'
+      ? 'Search group names'
+      : category === 'catchment'
+        ? 'Search for catchment areas or choose below'
+        : showPlaceholder
+          ? focused
+            ? 'Search for farms by distance, area, labels and more'
+            : 'Search Aggregate'
+          : '';
+
   const categoryChipBase =
     'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition';
 
@@ -155,7 +198,7 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
       onClick={focusInput}
       className="absolute left-1/2 top-4 z-10 w-[min(92vw,720px)] -translate-x-1/2 cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl backdrop-blur-md"
     >
-      {/* Input row: search icon, composing chip, applied pills, text input, clear */}
+      {/* Input row: search icon, composing tags, applied pills, text input, clear */}
       <div className="flex items-center gap-3">
         <span className="shrink-0 text-white/90">
           <SearchIcon />
@@ -219,20 +262,45 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
             </button>
           )}
 
+          {/* "river basin" tag, followed by the chosen districts as plain
+              text (same styling as the suggestions list), each with an ×. */}
+          {(category === 'catchment' || hasCatchmentFilter) && (
+            <Badge className="gap-1.5 rounded-full border-transparent bg-sky-200 px-3 py-1 text-sm font-semibold text-sky-950">
+              <Waves size={14} aria-hidden="true" />
+              river basin
+              <button
+                type="button"
+                onClick={removeCatchmentCategory}
+                aria-label="Remove river basin filter"
+                className="ml-0.5 rounded-full hover:bg-sky-950/10"
+              >
+                ×
+              </button>
+            </Badge>
+          )}
+
+          {appliedDistricts.map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => toggleDistrict(d)}
+              aria-label={`Remove ${d}`}
+              className="flex items-center gap-1.5 text-lg font-semibold text-white transition hover:text-white/80"
+            >
+              <Waves size={18} aria-hidden="true" />
+              {d}
+              <span aria-hidden="true" className="opacity-80">
+                ×
+              </span>
+            </button>
+          ))}
+
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onFocus={() => setFocused(true)}
-            placeholder={
-              composingName
-                ? 'Search group names'
-                : showPlaceholder
-                  ? focused
-                    ? 'Search for farms by distance, area, labels and more'
-                    : 'Search Aggregate'
-                  : ''
-            }
+            placeholder={placeholder}
             className={cn(
               'bg-transparent text-lg outline-none placeholder:text-white/70',
               collapsedWithChips ? 'w-0 min-w-0 flex-none p-0' : 'min-w-32 flex-1',
@@ -279,6 +347,18 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
             <MessageSquareQuote size={16} aria-hidden="true" />
             name
           </button>
+          <button
+            type="button"
+            onClick={() => startCategory('catchment')}
+            className={cn(
+              categoryChipBase,
+              'bg-sky-200/90 text-sky-950 hover:bg-sky-200',
+              category === 'catchment' && 'ring-2 ring-white',
+            )}
+          >
+            <Waves size={16} aria-hidden="true" />
+            river basin
+          </button>
         </div>
       )}
 
@@ -304,6 +384,39 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
                     {l.label}
                   </button>
                 </Badge>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Catchment suggestions: river basin districts, filtered by free text */}
+      {focused && category === 'catchment' && (
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+          {visibleDistricts.length === 0 ? (
+            <span className="text-sm text-white/70">No matching catchment areas</span>
+          ) : (
+            visibleDistricts.map((d) => {
+              const selected = appliedDistricts.includes(d);
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDistrict(d)}
+                  aria-label={selected ? `Remove ${d}` : `Add ${d}`}
+                  className={cn(
+                    'flex items-center gap-1.5 text-lg font-semibold transition',
+                    selected ? 'text-white' : 'text-white/80 hover:text-white',
+                  )}
+                >
+                  <Waves size={18} aria-hidden="true" />
+                  {d}
+                  {selected && (
+                    <span aria-hidden="true" className="opacity-80">
+                      ×
+                    </span>
+                  )}
+                </button>
               );
             })
           )}
