@@ -281,7 +281,9 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     }
 
     // river basin: the tag + chosen districts as plain text (same as the
-    // suggestions below), each with an ×.
+    // suggestions below), each with an ×. Guarded so an unexpected/stale
+    // category never falls through and renders a duplicate river basin badge.
+    if (c !== 'riverBasin') return null;
     return (
       <Fragment key="riverBasin">
         {(category === 'riverBasin' || hasRiverBasinFilter) && (
