@@ -247,12 +247,38 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
 
   return (
     <div className="relative w-full h-full bg-[#23263a]">
+      <div ref={mapContainer} className="w-full h-full" />
+
+      {/* Loading overlay: sits on top of the (already rendering) map and fades
+          out once the first frame is painted — the expected app-load feel.
+          Mirrors the Aggregate card's branding. */}
       <div
-        ref={mapContainer}
-        className={`w-full h-full transition-opacity duration-700 ease-out ${
-          visible ? "opacity-100" : "opacity-0"
+        className={`absolute inset-0 z-20 flex items-center justify-center bg-[#23263a] transition-opacity duration-500 ease-out ${
+          visible ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
-      />
+      >
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/bubbles-orange.svg" alt="" className="h-16 w-16 shrink-0" />
+            <div className="leading-tight">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-100/90">
+                Aggregate
+              </h1>
+              <p className="text-sm text-white/70">Discover your local farm group</p>
+            </div>
+          </div>
+
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/loading_fat_worm.svg" alt="Loading" className="h-16 w-16" />
+
+          <div className="flex items-center gap-2 opacity-90">
+            <span className="text-xs text-white/60">Powered by</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto" />
+          </div>
+        </div>
+      </div>
 
       {/* Bottom-right column: the group details box (on farm click) sits just
           above the Aggregate card, in a matching translucent style. */}
