@@ -287,7 +287,7 @@ export const Map = ({
       loadedRef.current = false;
       didFitRef.current = false;
     };
-  }, []);
+  }, [clearSelection]);
 
   // Push filtered farms (from the search bar) to the map whenever they change.
   useEffect(() => {
@@ -441,11 +441,9 @@ export const Map = ({
         </div>
       </div>
 
-      {/* Bottom-right column: the group details box (on farm click) sits just
-          above the Aggregate card, in a matching translucent style. */}
-      <div className="absolute bottom-9 right-4 z-10 flex w-64 flex-col gap-2.5">
-        {selectedGroup && selectedShown && (
-          <div className="pointer-events-auto relative max-h-[60vh] overflow-y-auto rounded-2xl bg-white/90 px-4 py-3 text-gray-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+      {/* Group details card — bottom-right, shown on farm click. */}
+      {selectedGroup && selectedShown && (
+        <div className="pointer-events-auto absolute bottom-9 right-4 z-10 w-80 max-h-[60vh] overflow-y-auto rounded-2xl bg-white/90 px-4 py-3 text-gray-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
             <button
               type="button"
               onClick={clearSelection}
@@ -560,21 +558,21 @@ export const Map = ({
           </div>
         )}
 
-        <div className="pointer-events-none flex flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
-          <div className="flex items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/bubbles-orange.svg" alt="" className="h-11 w-11 shrink-0" />
-            <div className="leading-tight">
-              <h1 className="text-xl font-bold tracking-tight text-slate-100/90">Aggregate</h1>
-              <p className="text-xs text-white/70">Discover your local farm group</p>
-            </div>
+      {/* Aggregate badge — bottom-left. */}
+      <div className="pointer-events-none absolute bottom-9 left-4 z-10 flex w-64 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/bubbles-orange.svg" alt="" className="h-11 w-11 shrink-0" />
+          <div className="leading-tight">
+            <h1 className="text-xl font-bold tracking-tight text-slate-100/90">Aggregate</h1>
+            <p className="text-xs text-white/70">Discover your local farm group</p>
           </div>
+        </div>
 
-          <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
-            <span className="text-xs text-white/70">Powered by</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto opacity-90" />
-          </div>
+        <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
+          <span className="text-xs text-white/70">Powered by</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto opacity-90" />
         </div>
       </div>
     </div>
