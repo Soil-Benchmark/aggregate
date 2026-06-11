@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { X } from "lucide-react";
+import { Waves, X } from "lucide-react";
 import { WATER_BODY_COLORS, WATER_BODY_FALLBACK } from "./catchmentFilters";
 import type { FarmGroup, FarmsGeoJSON, Label } from "@/lib/farmData";
 import { Badge } from "@/components/ui/badge";
@@ -29,13 +29,34 @@ const waterBodyColor = [
   WATER_BODY_FALLBACK,
 ] as mapboxgl.ExpressionSpecification;
 
+export type LayerVisibility = {
+  catchments: boolean;
+  basins: boolean;
+};
+
+export type GroupStats = {
+  farmCount: number;
+  districts: string[];
+  catchments: { id: string; name: string }[];
+};
+
 type MapProps = {
   farms: FarmsGeoJSON;
   groups: FarmGroup[];
   labels: Label[];
+  layers: LayerVisibility;
+  groupStats: Record<string, GroupStats>;
+  activeDistricts: string[];
 };
 
-export const Map = ({ farms, groups, labels }: MapProps) => {
+export const Map = ({
+  farms,
+  groups,
+  labels,
+  layers,
+  groupStats,
+  activeDistricts,
+}: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const loadedRef = useRef(false);
@@ -44,6 +65,8 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
   const [selectedGroup, setSelectedGroup] = useState<FarmGroup | null>(null);
   // Fade the map in once it has actually painted, to avoid a blank/white flash.
   const [visible, setVisible] = useState(false);
+  // True once layers exist, so the visibility effect can toggle them.
+  const [ready, setReady] = useState(false);
 
   // label name -> color, for tinting the panel tags like the search bar does.
   // (Plain object, not a Map — `Map` is this component's own name here.)
@@ -53,7 +76,7 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
   );
 
   // Reset the highlight paint + close the details panel.
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     const map = mapRef.current;
     if (map && loadedRef.current) {
       map.setPaintProperty(FILL_LAYER_ID, "fill-color", FARM_FILL);
@@ -61,7 +84,7 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
       map.setPaintProperty(LINE_LAYER_ID, "line-width", 1);
     }
     setSelectedGroup(null);
-  };
+  }, []);
 
   // Keep the latest data in refs so the one-time `load`/click handlers can read it.
   useEffect(() => {
@@ -74,10 +97,17 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
     let cancelled = false;
 
     (async () => {
-      const catchmentsData = await fetch(
-        "/data/catchments.simplified.geojson",
-      ).then((r) => r.json());
+      const [catchmentsData, districtsData] = await Promise.all([
+        fetch("/data/catchments.simplified.geojson").then((r) => r.json()),
+        fetch("/districts.geojson").then((r) => r.json()),
+      ]);
       if (cancelled || !mapContainer.current || mapRef.current) return;
+
+      // Only load river catchments for now.
+      catchmentsData.features = catchmentsData.features.filter(
+        (f: { properties?: { water_body_type?: string } }) =>
+          f.properties?.water_body_type === "River",
+      );
 
       mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -121,6 +151,24 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
           source: "catchments",
           layout: { visibility: "none" },
           paint: { "line-color": waterBodyColor, "line-width": 0.8 },
+        });
+
+        // River basin districts — sky-toned to match the "river basin" filter
+        // tag. Hidden until toggled in the layers panel.
+        map.addSource("districts", { type: "geojson", data: districtsData });
+        map.addLayer({
+          id: "districts-fill",
+          type: "fill",
+          source: "districts",
+          layout: { visibility: "none" },
+          paint: { "fill-color": "#38bdf8", "fill-opacity": 0.12 },
+        });
+        map.addLayer({
+          id: "districts-line",
+          type: "line",
+          source: "districts",
+          layout: { visibility: "none" },
+          paint: { "line-color": "#0ea5e9", "line-width": 1.2 },
         });
 
         // Farms on top (data comes from props; updated via setData below).
@@ -224,6 +272,8 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
           hoverPopup.remove();
         });
 
+        setReady(true);
+
         // Reveal only once the first frame with data has rendered.
         map.once("idle", () => setVisible(true));
       });
@@ -245,6 +295,98 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
     source?.setData(farms);
   }, [farms]);
 
+  // Toggle catchment / river-basin layer visibility from the layers panel.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const vis = (on: boolean) => (on ? "visible" : "none");
+    map.setLayoutProperty("catchments-fill", "visibility", vis(layers.catchments));
+    map.setLayoutProperty("catchments-line", "visibility", vis(layers.catchments));
+    map.setLayoutProperty("districts-fill", "visibility", vis(layers.basins));
+    map.setLayoutProperty("districts-line", "visibility", vis(layers.basins));
+  }, [layers, ready]);
+
+  // Scope the context layers to the river basins the search is filtering by, so
+  // the overlays match the farms on screen. No filter selected → show all.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const filter = (activeDistricts.length
+      ? ["in", ["get", "river_basin_district"], ["literal", activeDistricts]]
+      : null) as mapboxgl.FilterSpecification | null;
+    for (const id of [
+      "catchments-fill",
+      "catchments-line",
+      "districts-fill",
+      "districts-line",
+    ]) {
+      map.setFilter(id, filter);
+    }
+  }, [activeDistricts, ready]);
+
+  // Selecting a group emphasises the basin(s) it spans within the context
+  // layers (brighter/thicker) and dims the rest — without removing anything.
+  // Reverts to the base paint on deselect. (Search still owns what's filtered.)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const stats = selectedGroup ? groupStats[selectedGroup.groupId] : undefined;
+    const districts = stats?.districts ?? [];
+    const catchmentIds = stats?.catchments.map((c) => c.id) ?? [];
+
+    if (districts.length === 0 && catchmentIds.length === 0) {
+      map.setPaintProperty("districts-fill", "fill-opacity", 0.12);
+      map.setPaintProperty("districts-line", "line-color", "#0ea5e9");
+      map.setPaintProperty("districts-line", "line-width", 1.2);
+      map.setPaintProperty("catchments-fill", "fill-opacity", 0.3);
+      map.setPaintProperty("catchments-line", "line-width", 0.8);
+      return;
+    }
+
+    // Basins: emphasise the whole basin(s) the group sits in.
+    const inBasin = ["in", ["get", "river_basin_district"], ["literal", districts]];
+    map.setPaintProperty(
+      "districts-fill",
+      "fill-opacity",
+      ["case", inBasin, 0.3, 0.04] as mapboxgl.ExpressionSpecification,
+    );
+    map.setPaintProperty(
+      "districts-line",
+      "line-color",
+      ["case", inBasin, "#0284c7", "#0ea5e9"] as mapboxgl.ExpressionSpecification,
+    );
+    map.setPaintProperty(
+      "districts-line",
+      "line-width",
+      ["case", inBasin, 2.5, 0.6] as mapboxgl.ExpressionSpecification,
+    );
+
+    // Catchments: emphasise only the specific catchments the group's farms fall
+    // in — not every catchment in the basin.
+    const inCatch = ["in", ["get", "catchment_id"], ["literal", catchmentIds]];
+    map.setPaintProperty(
+      "catchments-fill",
+      "fill-opacity",
+      ["case", inCatch, 0.45, 0.06] as mapboxgl.ExpressionSpecification,
+    );
+    map.setPaintProperty(
+      "catchments-line",
+      "line-width",
+      ["case", inCatch, 1.6, 0.3] as mapboxgl.ExpressionSpecification,
+    );
+  }, [selectedGroup, groupStats, ready]);
+
+  // The selected group's facts + whether it still has farms on the (filtered)
+  // map. When a filter hides it, the card is gated out so it never lingers on
+  // something that isn't shown.
+  const selectedShown = useMemo(
+    () =>
+      !!selectedGroup &&
+      farms.features.some((f) => f.properties.group_id === selectedGroup.groupId),
+    [selectedGroup, farms],
+  );
+  const selectedStats = selectedGroup ? groupStats[selectedGroup.groupId] : undefined;
+
   return (
     <div className="relative w-full h-full bg-[#23263a]">
       <div ref={mapContainer} className="w-full h-full" />
@@ -253,7 +395,7 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
           out once the first frame is painted — the expected app-load feel.
           Mirrors the Aggregate card's branding. */}
       <div
-        className={`absolute inset-0 z-20 flex items-center justify-center bg-[#23263a] transition-opacity duration-500 ease-out ${
+        className={`absolute inset-0 z-50 flex items-center justify-center bg-[#23263a] transition-opacity duration-500 ease-out ${
           visible ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
@@ -283,7 +425,7 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
       {/* Bottom-right column: the group details box (on farm click) sits just
           above the Aggregate card, in a matching translucent style. */}
       <div className="absolute bottom-9 right-4 z-10 flex w-64 flex-col gap-2.5">
-        {selectedGroup && (
+        {selectedGroup && selectedShown && (
           <div className="pointer-events-auto relative max-h-[60vh] overflow-y-auto rounded-2xl bg-white/90 px-4 py-3 text-gray-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
             <button
               type="button"
@@ -305,6 +447,14 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
             )}
 
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+              {selectedStats && (
+                <>
+                  <dt className="font-medium text-gray-500">Farms</dt>
+                  <dd className="min-w-0 text-gray-700">
+                    {selectedStats.farmCount}
+                  </dd>
+                </>
+              )}
               {selectedGroup.contactName && (
                 <>
                   <dt className="font-medium text-gray-500">Contact</dt>
@@ -327,6 +477,43 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
                 </>
               )}
             </dl>
+
+            {selectedStats && selectedStats.districts.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-medium text-gray-500">
+                  River basin
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStats.districts.map((d) => (
+                    <span
+                      key={d}
+                      className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-900"
+                    >
+                      <Waves size={12} aria-hidden="true" />
+                      {d}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedStats && selectedStats.catchments.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-medium text-gray-500">
+                  Catchments ({selectedStats.catchments.length})
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {selectedStats.catchments.map((c) => (
+                    <span
+                      key={c.id}
+                      className="rounded-md bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-800 ring-1 ring-inset ring-sky-100"
+                    >
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {selectedGroup.labels.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">

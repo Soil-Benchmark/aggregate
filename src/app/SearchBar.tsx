@@ -25,7 +25,7 @@ const SearchIcon = () => (
 );
 
 const CloseIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
@@ -121,14 +121,14 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
   };
 
   // Apply a group-name filter straight from the omni search (typing + Enter, or
-  // clicking the "Search name" suggestion), then reset to keep composing.
+  // clicking the "Search name" suggestion). Drop into name-edit mode so the
+  // cursor lands in the name field — the user can keep typing or backspace it.
   const applyName = (value: string) => {
     const v = value.trim();
     if (!v) return;
     setNameQuery(v);
-    setCategory(null);
     setQuery('');
-    focusInput();
+    setCategory('name');
   };
 
   // Deleting the "has label" tag also removes the label filters it represents.
@@ -149,10 +149,12 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     if (category === 'riverBasin') clearComposing();
   };
 
+  // Clearing resets to the open, empty default — not collapsed.
   const clearAll = () => {
     onChange([]);
     clearComposing();
-    setFocused(false);
+    setFocused(true);
+    focusInput();
   };
 
   // Collapse when focus leaves the whole bar. Keep a composing tag if it
@@ -284,6 +286,17 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
             // Enter name mode only on a real click here, not on programmatic
             // focus — otherwise focusing it would override other chip clicks.
             onMouseDown={() => setCategory('name')}
+            onKeyDown={(e) => {
+              // Backspace on the empty name field removes the name chip itself,
+              // then hands focus to the main input so further backspaces remove
+              // the remaining tags.
+              if (e.key === 'Backspace' && nameQuery === '') {
+                e.preventDefault();
+                removeNameCategory();
+                setFocused(true);
+                setTimeout(() => inputRef.current?.focus(), 0);
+              }
+            }}
             className="bg-transparent text-lg text-white outline-none"
           />
         </Fragment>
@@ -334,7 +347,10 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       ref={containerRef}
       onBlur={handleBlur}
       onClick={focusInput}
-      className="absolute left-1/2 top-4 z-10 w-[min(92vw,720px)] -translate-x-1/2 cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl backdrop-blur-md"
+      className={cn(
+        'relative w-full cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md transition',
+        focused && 'ring-2 ring-white',
+      )}
     >
       {/* Input row: search icon, composing tags, applied pills, text input, clear */}
       <div className="flex items-center gap-3">
@@ -359,6 +375,18 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
                 if (e.key === 'Enter' && omniActive) {
                   e.preventDefault();
                   applyName(query);
+                  return;
+                }
+                // Backspace on an empty input removes the last tag (or cancels
+                // an empty composing category), like a chip input.
+                if (e.key === 'Backspace' && query === '') {
+                  if (filters.length > 0) {
+                    e.preventDefault();
+                    onChange(filters.slice(0, -1));
+                  } else if (category) {
+                    e.preventDefault();
+                    clearComposing();
+                  }
                 }
               }}
               placeholder={placeholder}

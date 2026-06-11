@@ -19,6 +19,8 @@ export type FarmProperties = {
   postcode: string;
   group_id: string;
   river_basin_district: string | null;
+  catchment_id: string | null;
+  catchment_name: string | null;
 };
 
 export type FarmsGeoJSON = FeatureCollection<Polygon, FarmProperties>;

@@ -54,3 +54,15 @@ body {
 .farm-hover-popup .mapboxgl-popup-tip {
   display: none;
 }
+
+/* Pop a menu open from its top-left corner (out to the right and down). */
+@keyframes menu-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
