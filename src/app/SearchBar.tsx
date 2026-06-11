@@ -120,6 +120,17 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     }
   };
 
+  // Apply a group-name filter straight from the omni search (typing + Enter, or
+  // clicking the "Search name" suggestion), then reset to keep composing.
+  const applyName = (value: string) => {
+    const v = value.trim();
+    if (!v) return;
+    setNameQuery(v);
+    setCategory(null);
+    setQuery('');
+    focusInput();
+  };
+
   // Deleting the "has label" tag also removes the label filters it represents.
   const removeLabelCategory = () => {
     onChange(filters.filter((f) => f.kind !== 'label'));
@@ -170,6 +181,16 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
     category === 'riverBasin'
       ? districts.filter((d) => d.toLowerCase().includes(q))
       : [];
+
+  // Omni search: with no category chosen, free text searches across every
+  // category at once so typing is immediately useful (not a dead end).
+  const omniActive = category === null && q !== '';
+  const omniLabels = omniActive
+    ? labels.filter((l) => l.label.toLowerCase().includes(q))
+    : [];
+  const omniDistricts = omniActive
+    ? districts.filter((d) => d.toLowerCase().includes(q))
+    : [];
 
   const isPristine =
     !focused && category === null && query === '' && filters.length === 0;
@@ -333,6 +354,13 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setFocused(true)}
+              onKeyDown={(e) => {
+                // In omni mode, Enter commits a group-name search for the text.
+                if (e.key === 'Enter' && omniActive) {
+                  e.preventDefault();
+                  applyName(query);
+                }
+              }}
               placeholder={placeholder}
               className={cn(
                 'bg-transparent text-lg outline-none placeholder:text-white/70',
@@ -354,8 +382,9 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
         )}
       </div>
 
-      {/* Category chips: shown while focused, the active one highlighted */}
-      {focused && (
+      {/* Category chips: browse entry points. Hidden in omni mode (typing with
+          no category) so the cross-category suggestions take over. */}
+      {focused && !omniActive && (
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
@@ -446,7 +475,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
                     selected ? 'text-white' : 'text-white/80 hover:text-white',
                   )}
                 >
-                  <Waves size={18} aria-hidden="true" />
+    <Waves size={18} aria-hidden="true" />
                   {d}
                   {selected && (
                     <span aria-hidden="true" className="opacity-80">
@@ -456,6 +485,84 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
                 </button>
               );
             })
+          )}
+        </div>
+      )}
+
+      {/* Omni suggestions: cross-category matches for the typed text. */}
+      {focused && omniActive && (
+        <div className="mt-3 flex flex-col gap-3">
+          {/* Name: the most common intent — also triggered by Enter. */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => applyName(query)}
+            className="flex items-center gap-2 text-left text-base text-white/90 transition hover:text-white"
+          >
+            <MessageSquareQuote size={18} aria-hidden="true" />
+            Search name
+            <span className="font-semibold">“{query.trim()}”</span>
+          </button>
+
+          {omniLabels.length > 0 && (
+            <div>
+              <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-white/50">
+                Labels
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {omniLabels.map((l) => {
+                  const selected = activeLabels.has(l.label);
+                  return (
+                    <Badge
+                      key={l.label}
+                      asChild
+                      className={cn(
+                        'cursor-pointer rounded-full border-transparent px-3 py-1 text-sm font-semibold transition',
+                        selected ? 'ring-2 ring-white' : 'opacity-90 hover:opacity-100',
+                      )}
+                      style={{ backgroundColor: l.color, color: readableText(l.color) }}
+                    >
+                      <button type="button" onClick={() => toggleLabel(l.label)}>
+                        {l.label}
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {omniDistricts.length > 0 && (
+            <div>
+              <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-white/50">
+                River basins
+              </div>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                {omniDistricts.map((d) => {
+                  const selected = appliedDistricts.includes(d);
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => toggleDistrict(d)}
+                      aria-label={selected ? `Remove ${d}` : `Add ${d}`}
+                      className={cn(
+                        'flex items-center gap-1.5 text-base font-semibold transition',
+                        selected ? 'text-white' : 'text-white/80 hover:text-white',
+                      )}
+                    >
+                      <Waves size={16} aria-hidden="true" />
+                      {d}
+                      {selected && (
+                        <span aria-hidden="true" className="opacity-80">
+                          ×
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       )}
