@@ -1,0 +1,38 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Required for keyless auth to GCP via Workload Identity Federation.
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: ivory-signer-382710
+  REGION: europe-west2
+  SERVICE: aggregate
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: projects/926807187680/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-deployer@ivory-signer-382710.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      # Build → push → deploy via the shared cloudbuild.yaml.
+      # The Mapbox token must be inlined at build time (NEXT_PUBLIC_*).
+      - name: Build and deploy
+        run: |
+          gcloud builds submit --config cloudbuild.yaml \
+            --substitutions=_MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }}

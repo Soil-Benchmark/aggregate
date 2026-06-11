@@ -1,0 +1,48 @@
+# Build → push → deploy to Cloud Run in one shot.
+# Run with:
+#   gcloud builds submit --config cloudbuild.yaml \
+#     --substitutions=_MAPBOX_TOKEN=pk.xxxx
+#
+# Override any of the _-prefixed substitutions below as needed, e.g.
+#   --substitutions=_MAPBOX_TOKEN=pk.xxxx,_REGION=us-central1,_SERVICE=aggregate
+
+substitutions:
+  _SERVICE: aggregate
+  _REGION: europe-west2
+  _REPO: cloud-run-source-deploy
+  _MAPBOX_TOKEN: "" # must be provided at submit time
+
+steps:
+  # Build the image, inlining the public Mapbox token at build time.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - NEXT_PUBLIC_MAPBOX_TOKEN=${_MAPBOX_TOKEN}
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID
+      - .
+
+  # Push to Artifact Registry.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID
+
+  # Deploy to Cloud Run.
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID
+
+options:
+  logging: CLOUD_LOGGING_ONLY
