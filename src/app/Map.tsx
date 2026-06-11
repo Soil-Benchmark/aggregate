@@ -235,9 +235,18 @@ export const Map = ({
             }
           }
           if (!bounds.isEmpty()) {
+            // Reserve room for the details panel: on the right on desktop, at
+            // the bottom (where the sheet sits) on mobile.
+            const wide = window.innerWidth >= 640;
             map.fitBounds(bounds, {
-              // Extra right padding so the cluster isn't hidden behind the panel.
-              padding: { top: 60, bottom: 60, left: 60, right: 360 },
+              padding: wide
+                ? { top: 60, bottom: 60, left: 60, right: 360 }
+                : {
+                    top: 70,
+                    bottom: Math.round(window.innerHeight * 0.45),
+                    left: 24,
+                    right: 24,
+                  },
               maxZoom: 14,
               duration: 800,
             });
@@ -445,7 +454,7 @@ export const Map = ({
 
       {/* Group details card — bottom-right, shown on farm click. */}
       {selectedGroup && selectedShown && (
-        <div className="pointer-events-auto absolute bottom-9 right-4 z-10 w-80 max-h-[60vh] overflow-y-auto rounded-2xl bg-white/90 px-4 py-3 text-gray-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+        <div className="pointer-events-auto absolute inset-x-2 bottom-4 z-30 max-h-[55dvh] overflow-y-auto rounded-2xl bg-white/90 px-4 py-3 text-gray-900 shadow-lg ring-1 ring-black/5 backdrop-blur-md sm:inset-x-auto sm:right-4 sm:bottom-9 sm:w-80 sm:max-h-[60vh]">
             <button
               type="button"
               onClick={clearSelection}
@@ -560,8 +569,13 @@ export const Map = ({
           </div>
         )}
 
-      {/* Aggregate badge — bottom-left. */}
-      <div className="pointer-events-none absolute bottom-9 left-4 z-10 flex w-64 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+      {/* Aggregate badge — bottom-left. Hidden on mobile while a details card
+          is open so the two don't overlap. */}
+      <div
+        className={`pointer-events-none absolute bottom-9 left-4 z-10 w-64 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md ${
+          selectedGroup && selectedShown ? "hidden sm:flex" : "flex"
+        }`}
+      >
         <button
           type="button"
           onClick={() => setAboutOpen((v) => !v)}
@@ -607,7 +621,7 @@ export const Map = ({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg animate-[menu-pop_160ms_ease-out] rounded-2xl bg-slate-600/90 p-8 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-md"
+            className="relative max-h-[85dvh] w-full max-w-lg overflow-y-auto animate-[menu-pop_160ms_ease-out] rounded-2xl bg-slate-600/90 p-6 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-md sm:p-8"
           >
             <button
               type="button"

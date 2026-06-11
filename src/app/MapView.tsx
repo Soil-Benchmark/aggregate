@@ -117,7 +117,7 @@ export const MapView = () => {
           </button>
 
           {layersOpen && (
-            <div className="absolute left-0 top-[60px] w-56 origin-top-left animate-[menu-pop_160ms_ease-out] rounded-2xl bg-slate-500/80 p-3 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md">
+            <div className="absolute right-0 top-[60px] w-56 origin-top-right animate-[menu-pop_160ms_ease-out] rounded-2xl bg-slate-500/80 p-3 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md sm:left-0 sm:right-auto sm:origin-top-left">
               {/* Water group — header matches the "river basin" search tag. */}
               <div className="flex w-fit items-center gap-1.5 rounded-lg bg-sky-200 px-2.5 py-1 text-sm font-medium text-sky-950">
                 <Waves size={16} aria-hidden="true" />

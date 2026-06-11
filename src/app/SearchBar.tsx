@@ -348,7 +348,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       onBlur={handleBlur}
       onClick={focusInput}
       className={cn(
-        'relative w-full cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md transition',
+        'relative max-h-[85dvh] w-full overflow-y-auto cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md transition',
         focused && 'ring-2 ring-white',
       )}
     >
