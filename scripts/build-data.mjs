@@ -6,7 +6,7 @@
 //   public/catchments.geojson   4,773 catchment MultiPolygons (23 MB)
 //
 // Outputs (small, shipped to the browser — written to public/data/):
-//   farms.geojson               farms deduped + catchment_id/name baked on
+//   farms-by-catchment.geojson  farms deduped + catchment_id/name baked on
 //   catchments-index.json       dropdown options (filter values + catchment list)
 //
 // The simplified catchment geometry for *display* is produced separately by
@@ -85,8 +85,8 @@ const index = {
 // --- 4. Write outputs ---
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(
-  path.join(OUT, 'farms.geojson'),
+  path.join(OUT, 'farms-by-catchment.geojson'),
   JSON.stringify({ type: 'FeatureCollection', features: farms }),
 );
 fs.writeFileSync(path.join(OUT, 'catchments-index.json'), JSON.stringify(index, null, 2));
-console.log(`wrote data/farms.geojson and data/catchments-index.json (${catchments.length} catchments with farms)`);
+console.log(`wrote data/farms-by-catchment.geojson and data/catchments-index.json (${catchments.length} catchments with farms)`);

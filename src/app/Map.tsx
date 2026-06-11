@@ -40,7 +40,7 @@ export const Map = () => {
 
     (async () => {
       const [farms, catchmentsData, idx] = await Promise.all([
-        fetch('/data/farms.geojson').then((r) => r.json()),
+        fetch('/data/farms-by-catchment.geojson').then((r) => r.json()),
         fetch('/data/catchments.simplified.geojson').then((r) => r.json()),
         fetch('/data/catchments-index.json').then((r) => r.json()),
       ]);
