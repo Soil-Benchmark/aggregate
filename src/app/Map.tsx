@@ -73,6 +73,8 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
 
   const [index, setIndex] = useState<FilterIndex | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  // Fade the map in once it has actually painted, to avoid a blank/white flash.
+  const [visible, setVisible] = useState(false);
 
   // Catchment-display filters: OR within each list, AND across the two.
   const [waterBodyTypes, setWaterBodyTypes] = useState<string[]>([]);
@@ -235,6 +237,9 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
         });
 
         setMapReady(true);
+
+        // Reveal only once the first frame with data has rendered.
+        map.once('idle', () => setVisible(true));
       });
     })();
 
@@ -277,8 +282,13 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
   }, [mapReady, waterBodyTypes, riverBasinDistricts, farmDistricts]);
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainer} className="w-full h-full" />
+    <div className="relative w-full h-full bg-[#23263a]">
+      <div
+        ref={mapContainer}
+        className={`w-full h-full transition-opacity duration-700 ease-out ${
+          visible ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
 
       {/* Left column: catchment filters, with the group details panel beneath. */}
       <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 flex-col gap-2.5">
@@ -364,12 +374,23 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
         )}
       </div>
 
-      <div className="pointer-events-none absolute bottom-9 right-4 z-10 flex flex-col items-end gap-1.5 rounded-xl bg-slate-500/80 px-3 py-2 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
-        <span className="self-start text-[10px] font-medium uppercase tracking-wider text-white/80">
-          Powered by
-        </span>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sb-logo.png" alt="SoilBenchmark" className="h-8 w-auto" />
+      <div className="pointer-events-none absolute bottom-9 right-4 z-10 flex w-64 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/bubbles-orange.svg" alt="" className="h-11 w-11 shrink-0" />
+          <div className="leading-tight">
+            <h1 className="text-xl font-bold tracking-tight text-slate-100/90">Aggregate</h1>
+            <p className="text-xs text-white/70">Discover your local farm group</p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
+          <span className="text-xs text-white/70">
+            Powered by
+          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto opacity-90" />
+        </div>
       </div>
     </div>
   );
