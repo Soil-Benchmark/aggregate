@@ -1,0 +1,12 @@
+[
+  { "label": "Regenerative Agriculture", "color": "#2F5A2C" },
+  { "label": "Biodiversity", "color": "#18BF0D" },
+  { "label": "Soil Health", "color": "#5F4F4F" },
+  { "label": "Arable", "color": "#999B0E" },
+  { "label": "Water & Catchment Management", "color": "#54A6BB" },
+  { "label": "Conservation Grant Schemes", "color": "#BB5454" },
+  { "label": "Knowledge & Resource Sharing", "color": "#BB54B0" },
+  { "label": "Pollinators", "color": "#E0A93B" },
+  { "label": "Field Margins & Habitat Connectivity", "color": "#7A9D4F" },
+  { "label": "Livestock & Grazing", "color": "#C87F3F" }
+]
