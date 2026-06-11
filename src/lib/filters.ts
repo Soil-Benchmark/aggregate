@@ -2,17 +2,18 @@ import type { FarmGroup, FarmsGeoJSON } from './farmData';
 
 /**
  * A single active search filter. Discriminated union so new filter kinds
- * (e.g. `catchment`, `location`) can be added without changing call sites.
+ * (e.g. `location`) can be added without changing call sites.
  */
 export type Filter =
   | { kind: 'label'; label: string }
-  | { kind: 'name'; query: string };
+  | { kind: 'name'; query: string }
+  | { kind: 'riverBasin'; district: string };
 
 /**
- * Returns the set of group ids that satisfy all active filters (combined with
- * AND). Label filters require a group to carry *every* selected label; the name
- * filter requires the group name to contain the query (case-insensitive). With
- * no filters, all groups match.
+ * Returns the set of group ids that satisfy the group-level filters (combined
+ * with AND). Label filters require a group to carry *every* selected label; the
+ * name filter requires the group name to contain the query (case-insensitive).
+ * With no such filters, all groups match.
  */
 export const matchingGroupIds = (
   groups: FarmGroup[],
@@ -34,11 +35,29 @@ export const matchingGroupIds = (
   return new Set(matches.map((g) => g.groupId));
 };
 
-/** Keeps only farms whose group is in `groupIds`. */
-export const filterFarms = (
+/**
+ * Resolves the set of farms to show. Group-level filters (label, name) are
+ * combined with AND; the river basin filter keeps farms in ANY of the selected
+ * river basin districts (OR). Categories combine with AND.
+ */
+export const applyFilters = (
   farms: FarmsGeoJSON,
-  groupIds: Set<string>,
-): FarmsGeoJSON => ({
-  type: 'FeatureCollection',
-  features: farms.features.filter((f) => groupIds.has(f.properties.group_id)),
-});
+  groups: FarmGroup[],
+  filters: Filter[],
+): FarmsGeoJSON => {
+  const groupIds = matchingGroupIds(groups, filters);
+  const districts = filters.flatMap((f) =>
+    f.kind === 'riverBasin' ? [f.district] : [],
+  );
+
+  return {
+    type: 'FeatureCollection',
+    features: farms.features.filter(
+      (f) =>
+        groupIds.has(f.properties.group_id) &&
+        (districts.length === 0 ||
+          (f.properties.river_basin_district !== null &&
+            districts.includes(f.properties.river_basin_district))),
+    ),
+  };
+};

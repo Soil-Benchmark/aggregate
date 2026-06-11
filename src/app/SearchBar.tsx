@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { MessageSquareQuote, Stamp } from 'lucide-react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { MessageSquareQuote, Stamp, Waves } from 'lucide-react';
 import type { Label } from '@/lib/farmData';
 import type { Filter } from '@/lib/filters';
 import { Badge } from '@/components/ui/badge';
@@ -9,12 +9,13 @@ import { cn, readableText } from '@/lib/utils';
 
 type SearchBarProps = {
   labels: Label[];
+  districts: string[];
   filters: Filter[];
   onChange: (filters: Filter[]) => void;
 };
 
 /** Filter category the user is composing in the input. */
-type Category = 'label' | 'name';
+type Category = 'label' | 'name' | 'riverBasin';
 
 const SearchIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -29,11 +30,12 @@ const CloseIcon = () => (
   </svg>
 );
 
-export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
+export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarProps) => {
   const [focused, setFocused] = useState(false);
   const [category, setCategory] = useState<Category | null>(null);
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const activeLabels = new Set(
@@ -51,7 +53,22 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
   // Committed group-name query (empty when no name filter is active).
   const nameQuery = filters.flatMap((f) => (f.kind === 'name' ? [f.query] : []))[0] ?? '';
 
-  const focusInput = () => inputRef.current?.focus();
+  // River basin districts the user has selected (selection order preserved).
+  const appliedDistricts = filters.flatMap((f) =>
+    f.kind === 'riverBasin' ? [f.district] : [],
+  );
+  const hasRiverBasinFilter = appliedDistricts.length > 0;
+
+  const focusInput = () => {
+    (category === 'name' ? nameInputRef : inputRef).current?.focus();
+  };
+
+  // Focus the right input when the composing category changes (the inline name
+  // input vs the shared palette-filter input at the end).
+  useEffect(() => {
+    if (!category) return;
+    (category === 'name' ? nameInputRef : inputRef).current?.focus();
+  }, [category]);
 
   const toggleLabel = (label: string) => {
     if (activeLabels.has(label)) {
@@ -63,12 +80,24 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     focusInput();
   };
 
+  const toggleDistrict = (district: string) => {
+    if (appliedDistricts.includes(district)) {
+      onChange(
+        filters.filter((f) => !(f.kind === 'riverBasin' && f.district === district)),
+      );
+    } else {
+      onChange([...filters, { kind: 'riverBasin', district }]);
+    }
+    setQuery('');
+    focusInput();
+  };
+
   const startCategory = (next: Category) => {
     setCategory(next);
-    // Resume the existing name query when re-entering "name"; otherwise the
-    // text is just a palette filter and starts empty.
-    setQuery(next === 'name' ? nameQuery : '');
-    focusInput();
+    // The shared input is a palette/suggestion filter; it always starts empty.
+    // (The name value lives in its own inline input.) Focus is handled by the
+    // category effect above.
+    setQuery('');
   };
 
   // Drop the in-progress composing state, keeping applied filters.
@@ -77,12 +106,17 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     setQuery('');
   };
 
-  // Free text is the group-name filter while composing "name"; keep it in sync.
-  const handleQueryChange = (value: string) => {
-    setQuery(value);
-    if (category === 'name') {
-      const others = filters.filter((f) => f.kind !== 'name');
-      onChange(value.trim() ? [...others, { kind: 'name', query: value }] : others);
+  // The group-name filter is edited via its own inline input. Update it in place
+  // so it keeps its position in the filter order (don't drop & re-append).
+  const setNameQuery = (value: string) => {
+    if (!value.trim()) {
+      onChange(filters.filter((f) => f.kind !== 'name'));
+    } else if (filters.some((f) => f.kind === 'name')) {
+      onChange(
+        filters.map((f) => (f.kind === 'name' ? { kind: 'name', query: value } : f)),
+      );
+    } else {
+      onChange([...filters, { kind: 'name', query: value }]);
     }
   };
 
@@ -96,6 +130,12 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
   const removeNameCategory = () => {
     onChange(filters.filter((f) => f.kind !== 'name'));
     if (category === 'name') clearComposing();
+  };
+
+  // Deleting the "river basin" tag removes all river basin district filters.
+  const removeRiverBasinCategory = () => {
+    onChange(filters.filter((f) => f.kind !== 'riverBasin'));
+    if (category === 'riverBasin') clearComposing();
   };
 
   const clearAll = () => {
@@ -114,17 +154,23 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
     } else if (category === 'label') {
       if (appliedLabels.length > 0) setQuery('');
       else clearComposing();
+    } else if (category === 'riverBasin') {
+      if (hasRiverBasinFilter) setQuery('');
+      else clearComposing();
     }
   };
 
-  // Labels offered in the palette, narrowed by the free text after "has label".
+  // Options offered in the palette, narrowed by the free text after the tag.
   const q = query.trim().toLowerCase();
   const visibleLabels =
     category === 'label'
       ? labels.filter((l) => l.label.toLowerCase().includes(q))
       : [];
+  const visibleDistricts =
+    category === 'riverBasin'
+      ? districts.filter((d) => d.toLowerCase().includes(q))
+      : [];
 
-  const composingName = category === 'name';
   const isPristine =
     !focused && category === null && query === '' && filters.length === 0;
   const showPlaceholder =
@@ -134,26 +180,33 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
   const collapsedWithChips =
     !focused && query === '' && (filters.length > 0 || category !== null);
 
+  const placeholder =
+    category === 'riverBasin'
+      ? 'Search for river basin districts or choose below'
+      : showPlaceholder
+        ? focused
+          ? 'Search for farms by distance, area, labels and more'
+          : 'Search Aggregate'
+        : '';
+
   const categoryChipBase =
     'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition';
 
-  return (
-    <div
-      ref={containerRef}
-      onBlur={handleBlur}
-      onClick={focusInput}
-      className="absolute left-1/2 top-4 z-10 w-[min(92vw,720px)] -translate-x-1/2 cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl backdrop-blur-md"
-    >
-      {/* Input row: search icon, composing chip, applied pills, text input, clear */}
-      <div className="flex items-center gap-3">
-        <span className="shrink-0 text-white/90">
-          <SearchIcon />
-        </span>
+  // Order the category segments in the search text by when each filter type was
+  // first added (filters order), with the category being composed appended last.
+  const categoryOrder: Category[] = [];
+  for (const f of filters) {
+    if (!categoryOrder.includes(f.kind)) categoryOrder.push(f.kind);
+  }
+  if (category && !categoryOrder.includes(category)) categoryOrder.push(category);
 
-        <div className="flex flex-1 flex-wrap items-center gap-2">
+  const renderCategorySegment = (c: Category) => {
+    if (c === 'label') {
+      return (
+        <Fragment key="label">
           {(category === 'label' || appliedLabels.length > 0) && (
-            <Badge className="gap-1.5 rounded-full border-transparent bg-emerald-200 px-3 py-1 text-sm font-semibold text-emerald-950">
-              <Stamp size={14} aria-hidden="true" />
+            <Badge className="gap-1.5 rounded-lg border-transparent bg-emerald-200 px-3 py-1.5 text-sm font-medium text-emerald-950">
+              <Stamp size={16} aria-hidden="true" />
               has label
               <button
                 type="button"
@@ -165,7 +218,6 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
               </button>
             </Badge>
           )}
-
           {appliedLabels.map((l) => (
             <Badge
               key={l.label}
@@ -181,52 +233,113 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
               </button>
             </Badge>
           ))}
+        </Fragment>
+      );
+    }
 
-          {/* "name" tag: while composing, the input below is its editor; when a
-              name filter is active but not composing, show its query statically. */}
-          {(composingName || hasNameFilter) && (
-            <Badge className="gap-1.5 rounded-full border-transparent bg-white px-3 py-1 text-sm font-semibold text-slate-900">
-              <MessageSquareQuote size={14} aria-hidden="true" />
-              name
-              <button
-                type="button"
-                onClick={removeNameCategory}
-                aria-label="Remove name filter"
-                className="ml-0.5 rounded-full hover:bg-slate-900/10"
-              >
-                ×
-              </button>
-            </Badge>
-          )}
-          {!composingName && hasNameFilter && (
+    if (c === 'name') {
+      // The "name" tag plus an inline input editing the group-name value in
+      // place (so it stays where it is, regardless of other filters).
+      return (
+        <Fragment key="name">
+          <Badge className="gap-1.5 rounded-lg border-transparent bg-white px-3 py-1.5 text-sm font-medium text-slate-900">
+            <MessageSquareQuote size={16} aria-hidden="true" />
+            name
             <button
               type="button"
-              onClick={() => startCategory('name')}
-              className="text-lg text-white/90 hover:text-white"
+              onClick={removeNameCategory}
+              aria-label="Remove name filter"
+              className="ml-0.5 rounded-full hover:bg-slate-900/10"
             >
-              {nameQuery}
+              ×
             </button>
-          )}
-
+          </Badge>
           <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
+            ref={nameInputRef}
+            value={nameQuery}
+            size={Math.max(nameQuery.length + 1, 4)}
+            onChange={(e) => setNameQuery(e.target.value)}
             onFocus={() => setFocused(true)}
-            placeholder={
-              composingName
-                ? 'Search group names'
-                : showPlaceholder
-                  ? focused
-                    ? 'Search for farms by distance, area, labels and more'
-                    : 'Search Aggregate'
-                  : ''
-            }
-            className={cn(
-              'bg-transparent text-lg outline-none placeholder:text-white/70',
-              collapsedWithChips ? 'w-0 min-w-0 flex-none p-0' : 'min-w-32 flex-1',
-            )}
+            // Enter name mode only on a real click here, not on programmatic
+            // focus — otherwise focusing it would override other chip clicks.
+            onMouseDown={() => setCategory('name')}
+            className="bg-transparent text-lg text-white outline-none"
           />
+        </Fragment>
+      );
+    }
+
+    // river basin: the tag + chosen districts as plain text (same as the
+    // suggestions below), each with an ×. Guarded so an unexpected/stale
+    // category never falls through and renders a duplicate river basin badge.
+    if (c !== 'riverBasin') return null;
+    return (
+      <Fragment key="riverBasin">
+        {(category === 'riverBasin' || hasRiverBasinFilter) && (
+          <Badge className="gap-1.5 rounded-lg border-transparent bg-sky-200 px-3 py-1.5 text-sm font-medium text-sky-950">
+            <Waves size={16} aria-hidden="true" />
+            river basin
+            <button
+              type="button"
+              onClick={removeRiverBasinCategory}
+              aria-label="Remove river basin filter"
+              className="ml-0.5 rounded-full hover:bg-sky-950/10"
+            >
+              ×
+            </button>
+          </Badge>
+        )}
+        {appliedDistricts.map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => toggleDistrict(d)}
+            aria-label={`Remove ${d}`}
+            className="flex items-center gap-1.5 text-lg font-semibold text-white transition hover:text-white/80"
+          >
+            <Waves size={18} aria-hidden="true" />
+            {d}
+            <span aria-hidden="true" className="opacity-80">
+              ×
+            </span>
+          </button>
+        ))}
+      </Fragment>
+    );
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onBlur={handleBlur}
+      onClick={focusInput}
+      className="absolute left-1/2 top-4 z-10 w-[min(92vw,720px)] -translate-x-1/2 cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl backdrop-blur-md"
+    >
+      {/* Input row: search icon, composing tags, applied pills, text input, clear */}
+      <div className="flex items-center gap-3">
+        <span className="shrink-0 text-white/90">
+          <SearchIcon />
+        </span>
+
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          {categoryOrder.map(renderCategorySegment)}
+
+          {/* Shared input: palette/suggestion filter for label & river basin, and
+              the general search field. The name value uses its own inline input,
+              so this one is hidden while composing "name". */}
+          {category !== 'name' && (
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setFocused(true)}
+              placeholder={placeholder}
+              className={cn(
+                'bg-transparent text-lg outline-none placeholder:text-white/70',
+                collapsedWithChips ? 'w-0 min-w-0 flex-none p-0' : 'min-w-32 flex-1',
+              )}
+            />
+          )}
         </div>
 
         {!isPristine && (
@@ -246,6 +359,7 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => startCategory('label')}
             className={cn(
               categoryChipBase,
@@ -258,6 +372,7 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
           </button>
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => startCategory('name')}
             className={cn(
               categoryChipBase,
@@ -267,6 +382,19 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
           >
             <MessageSquareQuote size={16} aria-hidden="true" />
             name
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => startCategory('riverBasin')}
+            className={cn(
+              categoryChipBase,
+              'bg-sky-200/90 text-sky-950 hover:bg-sky-200',
+              category === 'riverBasin' && 'ring-2 ring-white',
+            )}
+          >
+            <Waves size={16} aria-hidden="true" />
+            river basin
           </button>
         </div>
       )}
@@ -293,6 +421,39 @@ export const SearchBar = ({ labels, filters, onChange }: SearchBarProps) => {
                     {l.label}
                   </button>
                 </Badge>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* River basin suggestions: districts, filtered by free text */}
+      {focused && category === 'riverBasin' && (
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+          {visibleDistricts.length === 0 ? (
+            <span className="text-sm text-white/70">No matching river basin districts</span>
+          ) : (
+            visibleDistricts.map((d) => {
+              const selected = appliedDistricts.includes(d);
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDistrict(d)}
+                  aria-label={selected ? `Remove ${d}` : `Add ${d}`}
+                  className={cn(
+                    'flex items-center gap-1.5 text-lg font-semibold transition',
+                    selected ? 'text-white' : 'text-white/80 hover:text-white',
+                  )}
+                >
+                  <Waves size={18} aria-hidden="true" />
+                  {d}
+                  {selected && (
+                    <span aria-hidden="true" className="opacity-80">
+                      ×
+                    </span>
+                  )}
+                </button>
               );
             })
           )}

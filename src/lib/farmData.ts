@@ -27,10 +27,12 @@ export type FarmData = {
   groups: FarmGroup[];
   farms: FarmsGeoJSON;
   labels: Label[];
+  districts: string[];
 };
 
 type RawGroup = Omit<FarmGroup, 'labels'>;
 type RawGroupLabel = { groupId: string; label: string };
+type RawFiltersIndex = { river_basin_districts: string[] };
 
 const json = async <T>(url: string): Promise<T> => {
   const res = await fetch(url);
@@ -44,11 +46,12 @@ const json = async <T>(url: string): Promise<T> => {
  * Runs in the browser.
  */
 export const loadFarmData = async (): Promise<FarmData> => {
-  const [farms, rawGroups, groupLabels, labels] = await Promise.all([
+  const [farms, rawGroups, groupLabels, labels, filtersIndex] = await Promise.all([
     json<FarmsGeoJSON>('/data/farms-by-district.geojson'),
     json<RawGroup[]>('/data/farm_groups.json'),
     json<RawGroupLabel[]>('/data/group_labels.json'),
     json<Label[]>('/data/labels.json'),
+    json<RawFiltersIndex>('/data/filters-index.json'),
   ]);
 
   const labelsByGroup = new Map<string, string[]>();
@@ -63,5 +66,5 @@ export const loadFarmData = async (): Promise<FarmData> => {
     labels: labelsByGroup.get(g.groupId) ?? [],
   }));
 
-  return { groups, farms, labels };
+  return { groups, farms, labels, districts: filtersIndex.river_basin_districts };
 };

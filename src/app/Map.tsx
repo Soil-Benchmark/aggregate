@@ -4,12 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { X } from "lucide-react";
-import {
-  FilterIndex,
-  WATER_BODY_COLORS,
-  WATER_BODY_FALLBACK,
-} from "./catchmentFilters";
-import { FilterPanel } from "./FilterPanel";
+import { WATER_BODY_COLORS, WATER_BODY_FALLBACK } from "./catchmentFilters";
 import type { FarmGroup, FarmsGeoJSON, Label } from "@/lib/farmData";
 import { Badge } from "@/components/ui/badge";
 import { readableText } from "@/lib/utils";
@@ -46,6 +41,8 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
   const farmsRef = useRef<FarmsGeoJSON>(farms);
   const groupsRef = useRef<FarmGroup[]>(groups);
   const [selectedGroup, setSelectedGroup] = useState<FarmGroup | null>(null);
+  // Fade the map in once it has actually painted, to avoid a blank/white flash.
+  const [visible, setVisible] = useState(false);
 
   // label name -> color, for tinting the panel tags like the search bar does.
   // (Plain object, not a Map — `Map` is this component's own name here.)
@@ -71,29 +68,16 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
     groupsRef.current = groups;
   });
 
-  const [index, setIndex] = useState<FilterIndex | null>(null);
-  const [mapReady, setMapReady] = useState(false);
-  // Fade the map in once it has actually painted, to avoid a blank/white flash.
-  const [visible, setVisible] = useState(false);
-
-  // Catchment-display filters: OR within each list, AND across the two.
-  const [waterBodyTypes, setWaterBodyTypes] = useState<string[]>([]);
-  const [riverBasinDistricts, setRiverBasinDistricts] = useState<string[]>([]);
-  // Farm filter: show farms in ANY of the selected river basin districts.
-  const [farmDistricts, setFarmDistricts] = useState<string[]>([]);
-
   // Create the map, load the catchment layers, and add the (prop-supplied) farms.
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      const [catchmentsData, idx] = await Promise.all([
-        fetch("/data/catchments.simplified.geojson").then((r) => r.json()),
-        fetch("/data/filters-index.json").then((r) => r.json()),
-      ]);
+      const catchmentsData = await fetch(
+        "/data/catchments.simplified.geojson",
+      ).then((r) => r.json());
       if (cancelled || !mapContainer.current || mapRef.current) return;
 
-      setIndex(idx);
       mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
       const map = new mapboxgl.Map({
@@ -120,18 +104,21 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
       });
 
       map.on("load", () => {
-        // Catchments underneath, coloured by water body type.
+        // Catchments underneath, coloured by water body type. Hidden for now —
+        // a future layers panel can flip `visibility` to 'visible' to toggle them.
         map.addSource("catchments", { type: "geojson", data: catchmentsData });
         map.addLayer({
           id: "catchments-fill",
           type: "fill",
           source: "catchments",
+          layout: { visibility: "none" },
           paint: { "fill-color": waterBodyColor, "fill-opacity": 0.3 },
         });
         map.addLayer({
           id: "catchments-line",
           type: "line",
           source: "catchments",
+          layout: { visibility: "none" },
           paint: { "line-color": waterBodyColor, "line-width": 0.8 },
         });
 
@@ -236,10 +223,8 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
           hoverPopup.remove();
         });
 
-        setMapReady(true);
-
         // Reveal only once the first frame with data has rendered.
-        map.once('idle', () => setVisible(true));
+        map.once("idle", () => setVisible(true));
       });
     })();
 
@@ -247,7 +232,6 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
       cancelled = true;
       mapRef.current?.remove();
       mapRef.current = null;
-      setMapReady(false);
       loadedRef.current = false;
     };
   }, []);
@@ -260,48 +244,18 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
     source?.setData(farms);
   }, [farms]);
 
-  // Apply catchment filters whenever a selection changes (and once ready).
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    const catchExpr: unknown[] = ["all"];
-    if (waterBodyTypes.length)
-      catchExpr.push(["in", ["get", "water_body_type"], ["literal", waterBodyTypes]]);
-    if (riverBasinDistricts.length)
-      catchExpr.push(["in", ["get", "river_basin_district"], ["literal", riverBasinDistricts]]);
-    const catchmentFilter = (catchExpr.length > 1 ? catchExpr : null) as mapboxgl.FilterSpecification | null;
-    map.setFilter("catchments-fill", catchmentFilter);
-    map.setFilter("catchments-line", catchmentFilter);
-
-    const farmFilter = (farmDistricts.length
-      ? ["in", ["get", "river_basin_district"], ["literal", farmDistricts]]
-      : null) as mapboxgl.FilterSpecification | null;
-    map.setFilter(FILL_LAYER_ID, farmFilter);
-    map.setFilter(LINE_LAYER_ID, farmFilter);
-  }, [mapReady, waterBodyTypes, riverBasinDistricts, farmDistricts]);
-
   return (
     <div className="relative w-full h-full bg-[#23263a]">
       <div
         ref={mapContainer}
         className={`w-full h-full transition-opacity duration-700 ease-out ${
-          visible ? 'opacity-100' : 'opacity-0'
+          visible ? "opacity-100" : "opacity-0"
         }`}
       />
 
-      {/* Left column: catchment filters, with the group details panel beneath. */}
+      {/* Group details panel (top-left). The catchment FilterPanel was moved
+          into the search bar as the "river basin" filter. */}
       <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 flex-col gap-2.5">
-        <FilterPanel
-          index={index}
-          waterBodyTypes={waterBodyTypes}
-          setWaterBodyTypes={setWaterBodyTypes}
-          riverBasinDistricts={riverBasinDistricts}
-          setRiverBasinDistricts={setRiverBasinDistricts}
-          farmDistricts={farmDistricts}
-          setFarmDistricts={setFarmDistricts}
-        />
-
         {selectedGroup && (
           <div className="relative shrink-0 rounded-lg bg-white/95 p-4 shadow-lg backdrop-blur-sm">
             <button
@@ -385,9 +339,7 @@ export const Map = ({ farms, groups, labels }: MapProps) => {
         </div>
 
         <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
-          <span className="text-xs text-white/70">
-            Powered by
-          </span>
+          <span className="text-xs text-white/70">Powered by</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto opacity-90" />
         </div>
