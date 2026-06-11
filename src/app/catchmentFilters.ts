@@ -1,12 +1,12 @@
 // Shared types, colours, and helpers for the farm/catchment filters — used by
 // both the map (colour expression) and the filter panel (legend swatches).
 
-export type CatchmentOption = { catchment_id: string; name: string; farm_count: number };
+export type DistrictOption = { river_basin_district: string; farm_count: number };
 
 export type FilterIndex = {
   water_body_types: string[];
   river_basin_districts: string[];
-  catchments: CatchmentOption[];
+  districts: DistrictOption[];
 };
 
 // Colour catchments by water body type. Keys must match the data values.

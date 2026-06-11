@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, SetStateAction, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { FilterIndex, WATER_BODY_COLORS, toggle } from './catchmentFilters';
 
 /** A labelled group of checkboxes (OR within the group). Optional `colors`
@@ -56,8 +56,8 @@ type FilterPanelProps = {
   setWaterBodyTypes: Dispatch<SetStateAction<string[]>>;
   riverBasinDistricts: string[];
   setRiverBasinDistricts: Dispatch<SetStateAction<string[]>>;
-  catchments: string[];
-  setCatchments: Dispatch<SetStateAction<string[]>>;
+  farmDistricts: string[];
+  setFarmDistricts: Dispatch<SetStateAction<string[]>>;
 };
 
 export const FilterPanel = ({
@@ -66,17 +66,9 @@ export const FilterPanel = ({
   setWaterBodyTypes,
   riverBasinDistricts,
   setRiverBasinDistricts,
-  catchments,
-  setCatchments,
+  farmDistricts,
+  setFarmDistricts,
 }: FilterPanelProps) => {
-  const [catchmentSearch, setCatchmentSearch] = useState('');
-
-  const visibleCatchments = useMemo(() => {
-    const q = catchmentSearch.trim().toLowerCase();
-    const all = index?.catchments ?? [];
-    return q ? all.filter((c) => c.name.toLowerCase().includes(q)) : all;
-  }, [index, catchmentSearch]);
-
   return (
     <div className="absolute top-3 left-3 z-10 flex max-h-[calc(100%-1.5rem)] w-72 flex-col gap-4 overflow-y-auto rounded-lg bg-white/95 p-4 text-sm text-gray-800 shadow-lg">
       <div className="space-y-3">
@@ -101,39 +93,31 @@ export const FilterPanel = ({
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <p className="font-semibold text-gray-900">Farms</p>
-          {catchments.length > 0 && (
+          {farmDistricts.length > 0 && (
             <button
               className="text-xs text-blue-600 hover:underline"
-              onClick={() => setCatchments([])}
+              onClick={() => setFarmDistricts([])}
             >
-              clear ({catchments.length})
+              clear ({farmDistricts.length})
             </button>
           )}
         </div>
-        <span className="text-xs text-gray-500">In catchments</span>
-        <input
-          type="text"
-          placeholder="Search catchments…"
-          className="w-full rounded border border-gray-300 px-2 py-1"
-          value={catchmentSearch}
-          onChange={(e) => setCatchmentSearch(e.target.value)}
-        />
-        <div className="max-h-48 space-y-0.5 overflow-y-auto rounded border border-gray-200 p-1">
-          {visibleCatchments.map((c) => (
-            <label key={c.catchment_id} className="flex items-center gap-2">
+        <span className="text-xs text-gray-500">In river basin district</span>
+        <div className="space-y-0.5">
+          {(index?.districts ?? []).map((d) => (
+            <label key={d.river_basin_district} className="flex items-center gap-2">
               <input
                 type="checkbox"
-                checked={catchments.includes(c.catchment_id)}
-                onChange={() => setCatchments((s) => toggle(s, c.catchment_id))}
+                checked={farmDistricts.includes(d.river_basin_district)}
+                onChange={() =>
+                  setFarmDistricts((s) => toggle(s, d.river_basin_district))
+                }
               />
               <span className="truncate">
-                {c.name} ({c.farm_count})
+                {d.river_basin_district} ({d.farm_count})
               </span>
             </label>
           ))}
-          {visibleCatchments.length === 0 && (
-            <p className="px-1 py-2 text-xs text-gray-400">No matches</p>
-          )}
         </div>
       </div>
     </div>
