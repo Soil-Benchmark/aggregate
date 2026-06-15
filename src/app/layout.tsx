@@ -22,21 +22,21 @@ const description =
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Aggregate by Soil Benchmark",
-    template: "%s · Aggregate",
+    default: "Facilitator Forum by Soil Benchmark",
+    template: "%s · Facilitator Forum",
   },
   description,
-  applicationName: "Aggregate",
+  applicationName: "Facilitator Forum",
   openGraph: {
-    title: "Aggregate by Soil Benchmark",
+    title: "Facilitator Forum by Soil Benchmark",
     description,
-    siteName: "Aggregate",
+    siteName: "Facilitator Forum",
     url: "/",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aggregate by Soil Benchmark",
+    title: "Facilitator Forum by Soil Benchmark",
     description,
   },
 };

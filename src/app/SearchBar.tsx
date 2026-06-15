@@ -203,13 +203,14 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
   const collapsedWithChips =
     !focused && query === '' && (filters.length > 0 || category !== null);
 
+  // (white-theme search box)
   const placeholder =
     category === 'riverBasin'
       ? 'Search for river basin districts or choose below'
       : showPlaceholder
         ? focused
           ? 'Search for farm groups by name, labels and more'
-          : 'Search Aggregate'
+          : 'Search Facilitator Forum'
         : '';
 
   const categoryChipBase =
@@ -265,7 +266,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       // place (so it stays where it is, regardless of other filters).
       return (
         <Fragment key="name">
-          <Badge className="gap-1.5 rounded-lg border-transparent bg-white px-3 py-1.5 text-sm font-medium text-slate-900">
+          <Badge className="gap-1.5 rounded-lg border-transparent bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-900">
             <MessageSquareQuote size={16} aria-hidden="true" />
             name
             <button
@@ -297,7 +298,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
                 setTimeout(() => inputRef.current?.focus(), 0);
               }
             }}
-            className="bg-transparent text-lg text-white outline-none"
+            className="bg-transparent text-base text-slate-800 outline-none"
           />
         </Fragment>
       );
@@ -329,7 +330,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
             type="button"
             onClick={() => toggleDistrict(d)}
             aria-label={`Remove ${d}`}
-            className="flex items-center gap-1.5 text-lg font-semibold text-white transition hover:text-white/80"
+            className="flex items-center gap-1.5 text-base font-semibold text-slate-800 transition hover:text-slate-500"
           >
             <Waves size={18} aria-hidden="true" />
             {d}
@@ -348,13 +349,13 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       onBlur={handleBlur}
       onClick={focusInput}
       className={cn(
-        'relative max-h-[85dvh] w-full overflow-y-auto cursor-text rounded-2xl bg-slate-500/80 px-4 py-3 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md transition',
-        focused && 'ring-2 ring-white',
+        'relative max-h-[85dvh] w-full overflow-y-auto cursor-text rounded-lg bg-white px-4 py-1.5 text-slate-800 shadow-xl ring-1 ring-black/5 backdrop-blur-md transition',
+        focused && 'ring-2 ring-[#2e4d34]',
       )}
     >
       {/* Input row: search icon, composing tags, applied pills, text input, clear */}
       <div className="flex items-center gap-3">
-        <span className="shrink-0 text-white/90">
+        <span className="shrink-0 text-slate-500">
           <SearchIcon />
         </span>
 
@@ -391,7 +392,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
               }}
               placeholder={placeholder}
               className={cn(
-                'bg-transparent text-lg outline-none placeholder:text-white/70',
+                'bg-transparent text-base outline-none placeholder:text-slate-400',
                 collapsedWithChips ? 'w-0 min-w-0 flex-none p-0' : 'min-w-32 flex-1',
               )}
             />
@@ -403,7 +404,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
             type="button"
             onClick={clearAll}
             aria-label="Clear search"
-            className="shrink-0 rounded-full p-1 text-white/90 transition hover:bg-white/10"
+            className="shrink-0 rounded-full p-1 text-slate-500 transition hover:bg-black/5"
           >
             <CloseIcon />
           </button>
@@ -421,7 +422,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
             className={cn(
               categoryChipBase,
               'bg-emerald-200/90 text-emerald-950 hover:bg-emerald-200',
-              category === 'label' && 'ring-2 ring-white',
+              category === 'label' && 'ring-2 ring-[#2e4d34]',
             )}
           >
             <Stamp size={16} aria-hidden="true" />
@@ -433,8 +434,8 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
             onClick={() => startCategory('name')}
             className={cn(
               categoryChipBase,
-              'bg-white/90 text-slate-900 hover:bg-white',
-              category === 'name' && 'ring-2 ring-white',
+              'bg-slate-100 text-slate-900 hover:bg-slate-50',
+              category === 'name' && 'ring-2 ring-[#2e4d34]',
             )}
           >
             <MessageSquareQuote size={16} aria-hidden="true" />
@@ -447,7 +448,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
             className={cn(
               categoryChipBase,
               'bg-sky-200/90 text-sky-950 hover:bg-sky-200',
-              category === 'riverBasin' && 'ring-2 ring-white',
+              category === 'riverBasin' && 'ring-2 ring-[#2e4d34]',
             )}
           >
             <Waves size={16} aria-hidden="true" />
@@ -460,7 +461,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       {focused && category === 'label' && (
         <div className="mt-3 flex flex-wrap gap-2">
           {visibleLabels.length === 0 ? (
-            <span className="text-sm text-white/70">No matching labels</span>
+            <span className="text-sm text-slate-400">No matching labels</span>
           ) : (
             visibleLabels.map((l) => {
               const selected = activeLabels.has(l.label);
@@ -470,7 +471,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
                   asChild
                   className={cn(
                     'cursor-pointer rounded-full border-transparent px-3 py-1 text-sm font-semibold transition',
-                    selected ? 'ring-2 ring-white' : 'opacity-90 hover:opacity-100',
+                    selected ? 'ring-2 ring-[#2e4d34]' : 'opacity-90 hover:opacity-100',
                   )}
                   style={{ backgroundColor: l.color, color: readableText(l.color) }}
                 >
@@ -488,7 +489,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
       {focused && category === 'riverBasin' && (
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
           {visibleDistricts.length === 0 ? (
-            <span className="text-sm text-white/70">No matching river basin districts</span>
+            <span className="text-sm text-slate-400">No matching river basin districts</span>
           ) : (
             visibleDistricts.map((d) => {
               const selected = appliedDistricts.includes(d);
@@ -499,8 +500,8 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
                   onClick={() => toggleDistrict(d)}
                   aria-label={selected ? `Remove ${d}` : `Add ${d}`}
                   className={cn(
-                    'flex items-center gap-1.5 text-lg font-semibold transition',
-                    selected ? 'text-white' : 'text-white/80 hover:text-white',
+                    'flex items-center gap-1.5 text-base font-semibold transition',
+                    selected ? 'text-slate-800' : 'text-slate-500 hover:text-slate-700',
                   )}
                 >
     <Waves size={18} aria-hidden="true" />
@@ -525,7 +526,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => applyName(query)}
-            className="flex items-center gap-2 text-left text-base text-white/90 transition hover:text-white"
+            className="flex items-center gap-2 text-left text-base text-slate-500 transition hover:text-slate-700"
           >
             <MessageSquareQuote size={18} aria-hidden="true" />
             Search name
@@ -534,7 +535,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
 
           {omniLabels.length > 0 && (
             <div>
-              <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-white/50">
+              <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-slate-400">
                 Labels
               </div>
               <div className="flex flex-wrap gap-2">
@@ -546,7 +547,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
                       asChild
                       className={cn(
                         'cursor-pointer rounded-full border-transparent px-3 py-1 text-sm font-semibold transition',
-                        selected ? 'ring-2 ring-white' : 'opacity-90 hover:opacity-100',
+                        selected ? 'ring-2 ring-[#2e4d34]' : 'opacity-90 hover:opacity-100',
                       )}
                       style={{ backgroundColor: l.color, color: readableText(l.color) }}
                     >
@@ -562,7 +563,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
 
           {omniDistricts.length > 0 && (
             <div>
-              <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-white/50">
+              <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-slate-400">
                 River basins
               </div>
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -576,7 +577,7 @@ export const SearchBar = ({ labels, districts, filters, onChange }: SearchBarPro
                       aria-label={selected ? `Remove ${d}` : `Add ${d}`}
                       className={cn(
                         'flex items-center gap-1.5 text-base font-semibold transition',
-                        selected ? 'text-white' : 'text-white/80 hover:text-white',
+                        selected ? 'text-slate-800' : 'text-slate-500 hover:text-slate-700',
                       )}
                     >
                       <Waves size={16} aria-hidden="true" />

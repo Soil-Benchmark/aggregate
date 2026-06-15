@@ -62,11 +62,12 @@ export const loadFarmData = async (): Promise<FarmData> => {
     fetch('/api/data'),
   ]);
 
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as StoredData;
-    throw new Error(body.error ?? `Failed to load data (${res.status})`);
-  }
-  const stored = (await res.json()) as StoredData;
+  // In local dev there's no GCS, so /api/data returns 503 — fall back to the
+  // bundled seed snapshot (a read-only copy of the live data) so the map still
+  // shows clusters. In production (GCS configured) the API path is used.
+  const stored: StoredData = res.ok
+    ? ((await res.json()) as StoredData)
+    : await json<StoredData>('/data/seed-live.json');
 
   const groups: FarmGroup[] = (stored.groups ?? []).map((g) => ({
     ...g,

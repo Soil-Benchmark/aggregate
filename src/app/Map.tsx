@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Info, Waves, X } from "lucide-react";
+import { Waves, X } from "lucide-react";
 import { WATER_BODY_COLORS, WATER_BODY_FALLBACK } from "./catchmentFilters";
 import type { FarmGroup, FarmsGeoJSON, Label } from "@/lib/farmData";
 import { Badge } from "@/components/ui/badge";
@@ -15,11 +15,46 @@ const INITIAL_ZOOM = 5;
 const FILL_LAYER_ID = "farms-fill";
 const LINE_LAYER_ID = "farms-line";
 
-// Base farm colours (unselected); a clicked group is highlighted by darkening.
+// Hover-highlight layers: hovering a chip in the details card outlines that
+// area on the map. One entry per boundary source + the field to match on.
+const HIGHLIGHT_LAYERS = [
+  { id: "hl-catchments", source: "catchments", field: "catchment_id" },
+  { id: "hl-districts", source: "districts", field: "river_basin_district" },
+  { id: "hl-counties", source: "counties", field: "CTYUA23NM" },
+  { id: "hl-la", source: "local-authorities", field: "LAD24NM" },
+  { id: "hl-constituencies", source: "constituencies", field: "PCON24NM" },
+  { id: "hl-sssi", source: "sssi", field: "NAME" },
+] as const;
+
+// Fallback farm fill (used before groups load / for unknown groups).
 const FARM_FILL = "#ff7a00";
-const FARM_LINE = "#ff9933";
-const HIGHLIGHT_FILL = "#662b00";
-const HIGHLIGHT_LINE = "#803600";
+// Dark outline so adjacent cluster fills stay visually separated.
+const FARM_LINE = "#1f2937";
+
+// Distinct colours so each cluster is its own colour on the map. Cycled if
+// there are more clusters than colours.
+const CLUSTER_PALETTE = [
+  "#e6194B", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#42d4f4",
+  "#f032e6", "#469990", "#9A6324", "#800000", "#808000", "#000075",
+  "#e6840b", "#1b9e77", "#d81b60", "#5e35b1", "#00897b", "#c0ca33",
+];
+
+// Build a Mapbox "match" expression: group_id -> cluster colour.
+const farmColorExpression = (
+  groupIds: string[],
+): mapboxgl.ExpressionSpecification | string => {
+  if (groupIds.length === 0) return FARM_FILL;
+  const pairs = groupIds.flatMap((id, i) => [
+    id,
+    CLUSTER_PALETTE[i % CLUSTER_PALETTE.length],
+  ]);
+  return [
+    "match",
+    ["get", "group_id"],
+    ...pairs,
+    FARM_FILL,
+  ] as mapboxgl.ExpressionSpecification;
+};
 
 // Mapbox match expression: water_body_type -> colour.
 const waterBodyColor = [
@@ -29,15 +64,38 @@ const waterBodyColor = [
   WATER_BODY_FALLBACK,
 ] as mapboxgl.ExpressionSpecification;
 
+// Walk every [lng, lat] position in a Polygon OR MultiPolygon coordinate array
+// (so bounds work for both — SBI/shapefile farms are MultiPolygons).
+const eachPosition = (
+  coords: unknown,
+  cb: (pos: [number, number]) => void,
+): void => {
+  if (Array.isArray(coords) && typeof coords[0] === "number") {
+    cb(coords as [number, number]);
+    return;
+  }
+  if (Array.isArray(coords)) for (const c of coords) eachPosition(c, cb);
+};
+
 export type LayerVisibility = {
   catchments: boolean;
   basins: boolean;
+  rivers: boolean;
+  counties: boolean;
+  localAuthorities: boolean;
+  constituencies: boolean;
+  sssi: boolean;
 };
 
 export type GroupStats = {
   farmCount: number;
+  areaHa: number;
   districts: string[];
   catchments: { id: string; name: string }[];
+  counties: string[];
+  localAuthorities: string[];
+  constituencies: string[];
+  sssi: string[];
 };
 
 type MapProps = {
@@ -47,6 +105,10 @@ type MapProps = {
   layers: LayerVisibility;
   groupStats: Record<string, GroupStats>;
   activeDistricts: string[];
+  basemap: "standard" | "satellite";
+  canEdit?: boolean;
+  onRemoveGroup?: (groupId: string) => void;
+  onMapReady?: (map: mapboxgl.Map) => void;
 };
 
 export const Map = ({
@@ -56,6 +118,10 @@ export const Map = ({
   layers,
   groupStats,
   activeDistricts,
+  basemap,
+  canEdit,
+  onRemoveGroup,
+  onMapReady,
 }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -68,8 +134,6 @@ export const Map = ({
   const [visible, setVisible] = useState(false);
   // True once layers exist, so the visibility effect can toggle them.
   const [ready, setReady] = useState(false);
-  // The "about / why Aggregate" popover on the badge.
-  const [aboutOpen, setAboutOpen] = useState(false);
 
   // label name -> color, for tinting the panel tags like the search bar does.
   // (Plain object, not a Map — `Map` is this component's own name here.)
@@ -82,11 +146,38 @@ export const Map = ({
   const clearSelection = useCallback(() => {
     const map = mapRef.current;
     if (map && loadedRef.current) {
-      map.setPaintProperty(FILL_LAYER_ID, "fill-color", FARM_FILL);
-      map.setPaintProperty(LINE_LAYER_ID, "line-color", FARM_LINE);
-      map.setPaintProperty(LINE_LAYER_ID, "line-width", 1);
+      // Keep the per-cluster fill colours; just restore uniform emphasis.
+      map.setPaintProperty(FILL_LAYER_ID, "fill-opacity", 0.8);
+      map.setPaintProperty(LINE_LAYER_ID, "line-width", 0.8);
     }
     setSelectedGroup(null);
+  }, []);
+
+  // Hovering a chip in the details card outlines that area on the map.
+  const highlightArea = useCallback((id: string, value: string) => {
+    const map = mapRef.current;
+    if (!map || !loadedRef.current) return;
+    for (const h of HIGHLIGHT_LAYERS) {
+      const on = h.id === id;
+      const filter = [
+        "==",
+        ["get", h.field],
+        on ? value : "__none__",
+      ] as mapboxgl.FilterSpecification;
+      map.setFilter(`${h.id}-fill`, filter);
+      map.setFilter(`${h.id}-line`, filter);
+      const vis = on ? "visible" : "none";
+      map.setLayoutProperty(`${h.id}-fill`, "visibility", vis);
+      map.setLayoutProperty(`${h.id}-line`, "visibility", vis);
+    }
+  }, []);
+  const clearHighlight = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || !loadedRef.current) return;
+    for (const h of HIGHLIGHT_LAYERS) {
+      map.setLayoutProperty(`${h.id}-fill`, "visibility", "none");
+      map.setLayoutProperty(`${h.id}-line`, "visibility", "none");
+    }
   }, []);
 
   // Keep the latest data in refs so the one-time `load`/click handlers can read it.
@@ -100,9 +191,22 @@ export const Map = ({
     let cancelled = false;
 
     (async () => {
-      const [catchmentsData, districtsData] = await Promise.all([
+      const [
+        catchmentsData,
+        districtsData,
+        countiesData,
+        laData,
+        riversData,
+        constituenciesData,
+        sssiData,
+      ] = await Promise.all([
         fetch("/data/catchments.geojson").then((r) => r.json()),
         fetch("/data/districts.geojson").then((r) => r.json()),
+        fetch("/data/counties.geojson").then((r) => r.json()),
+        fetch("/data/local-authorities.geojson").then((r) => r.json()),
+        fetch("/data/rivers.geojson").then((r) => r.json()),
+        fetch("/data/constituencies.geojson").then((r) => r.json()),
+        fetch("/data/sssi.geojson").then((r) => r.json()),
       ]);
       if (cancelled || !mapContainer.current || mapRef.current) return;
 
@@ -124,6 +228,8 @@ export const Map = ({
         antialias: true,
       });
       mapRef.current = map;
+      // Hand the map instance up so MapView can render the custom control bar.
+      onMapReady?.(map);
 
       const resizeObserver = new ResizeObserver(() => map.resize());
       resizeObserver.observe(mapContainer.current);
@@ -138,6 +244,16 @@ export const Map = ({
       });
 
       map.on("load", () => {
+        // 3D terrain — so hills and valleys show when the map is pitched (3D),
+        // like the main Soil Benchmark platform.
+        map.addSource("mapbox-dem", {
+          type: "raster-dem",
+          url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+          tileSize: 512,
+          maxzoom: 14,
+        });
+        map.setTerrain({ source: "mapbox-dem", exaggeration: 1.3 });
+
         // Catchments underneath, coloured by water body type. Hidden for now —
         // a future layers panel can flip `visibility` to 'visible' to toggle them.
         map.addSource("catchments", { type: "geojson", data: catchmentsData });
@@ -174,20 +290,141 @@ export const Map = ({
           paint: { "line-color": "#0ea5e9", "line-width": 1.2 },
         });
 
+        // Administrative boundaries — counties (amber) and local authorities
+        // (violet). Hidden until toggled in the layers panel.
+        map.addSource("counties", { type: "geojson", data: countiesData });
+        map.addLayer({
+          id: "counties-fill",
+          type: "fill",
+          source: "counties",
+          layout: { visibility: "none" },
+          paint: { "fill-color": "#d97706", "fill-opacity": 0.06 },
+        });
+        map.addLayer({
+          id: "counties-line",
+          type: "line",
+          source: "counties",
+          layout: { visibility: "none" },
+          paint: { "line-color": "#b45309", "line-width": 1.4 },
+        });
+
+        map.addSource("local-authorities", { type: "geojson", data: laData });
+        map.addLayer({
+          id: "la-fill",
+          type: "fill",
+          source: "local-authorities",
+          layout: { visibility: "none" },
+          paint: { "fill-color": "#7c3aed", "fill-opacity": 0.05 },
+        });
+        map.addLayer({
+          id: "la-line",
+          type: "line",
+          source: "local-authorities",
+          layout: { visibility: "none" },
+          paint: { "line-color": "#6d28d9", "line-width": 1 },
+        });
+
+        // Westminster parliamentary constituencies (rose). Hidden by default.
+        map.addSource("constituencies", {
+          type: "geojson",
+          data: constituenciesData,
+        });
+        map.addLayer({
+          id: "constituencies-fill",
+          type: "fill",
+          source: "constituencies",
+          layout: { visibility: "none" },
+          paint: { "fill-color": "#db2777", "fill-opacity": 0.05 },
+        });
+        map.addLayer({
+          id: "constituencies-line",
+          type: "line",
+          source: "constituencies",
+          layout: { visibility: "none" },
+          paint: { "line-color": "#be185d", "line-width": 1 },
+        });
+
+        // SSSIs (green) — Sites of Special Scientific Interest. Hidden by default.
+        map.addSource("sssi", { type: "geojson", data: sssiData });
+        map.addLayer({
+          id: "sssi-fill",
+          type: "fill",
+          source: "sssi",
+          layout: { visibility: "none" },
+          paint: { "fill-color": "#15803d", "fill-opacity": 0.18 },
+        });
+        map.addLayer({
+          id: "sssi-line",
+          type: "line",
+          source: "sssi",
+          layout: { visibility: "none" },
+          paint: { "line-color": "#166534", "line-width": 1 },
+        });
+
         // Farms on top (data comes from props; updated via setData below).
         map.addSource("farms", { type: "geojson", data: farmsRef.current });
         map.addLayer({
           id: FILL_LAYER_ID,
           type: "fill",
           source: "farms",
-          paint: { "fill-color": FARM_FILL, "fill-opacity": 0.85 },
+          paint: { "fill-color": FARM_FILL, "fill-opacity": 0.8 },
         });
         map.addLayer({
           id: LINE_LAYER_ID,
           type: "line",
           source: "farms",
-          paint: { "line-color": FARM_LINE, "line-width": 1 },
+          paint: { "line-color": FARM_LINE, "line-width": 0.8 },
         });
+
+        // Satellite basemap, inserted just below the overlays so the farms /
+        // catchments still sit on top. Hidden by default (Standard map); the
+        // "map layers" control toggles it on for a satellite view.
+        map.addSource("satellite", {
+          type: "raster",
+          url: "mapbox://mapbox.satellite",
+          tileSize: 256,
+        });
+        map.addLayer(
+          {
+            id: "satellite-basemap",
+            type: "raster",
+            source: "satellite",
+            layout: { visibility: "none" },
+            paint: { "raster-opacity": 1 },
+          },
+          "catchments-fill",
+        );
+
+        // Major rivers (OS Open Rivers, named rivers > 35km). Drawn on top as a
+        // highlight; hidden until toggled.
+        map.addSource("rivers", { type: "geojson", data: riversData });
+        map.addLayer({
+          id: "rivers-line",
+          type: "line",
+          source: "rivers",
+          layout: { visibility: "none", "line-cap": "round", "line-join": "round" },
+          paint: { "line-color": "#1d4ed8", "line-width": 2.4, "line-opacity": 0.95 },
+        });
+
+        // Hover-highlight layers (match nothing + hidden until a chip is hovered).
+        for (const h of HIGHLIGHT_LAYERS) {
+          map.addLayer({
+            id: `${h.id}-fill`,
+            type: "fill",
+            source: h.source,
+            layout: { visibility: "none" },
+            filter: ["==", ["get", h.field], "__none__"],
+            paint: { "fill-color": "#fde047", "fill-opacity": 0.35 },
+          });
+          map.addLayer({
+            id: `${h.id}-line`,
+            type: "line",
+            source: h.source,
+            layout: { visibility: "none" },
+            filter: ["==", ["get", h.field], "__none__"],
+            paint: { "line-color": "#f59e0b", "line-width": 3 },
+          });
+        }
 
         loadedRef.current = true;
 
@@ -202,25 +439,21 @@ export const Map = ({
           };
           const groupId = props.group_id ?? "";
 
-          // Highlight all farms in the clicked group in a single repaint.
-          map.setPaintProperty(FILL_LAYER_ID, "fill-color", [
+          // Emphasise the clicked group: keep every cluster's own colour, but
+          // bring the selected one forward and dim the rest.
+          const inGroup = ["==", ["get", "group_id"], groupId];
+          map.setPaintProperty(FILL_LAYER_ID, "fill-opacity", [
             "case",
-            ["==", ["get", "group_id"], groupId],
-            HIGHLIGHT_FILL,
-            FARM_FILL,
-          ]);
-          map.setPaintProperty(LINE_LAYER_ID, "line-color", [
-            "case",
-            ["==", ["get", "group_id"], groupId],
-            HIGHLIGHT_LINE,
-            FARM_LINE,
-          ]);
+            inGroup,
+            0.92,
+            0.25,
+          ] as mapboxgl.ExpressionSpecification);
           map.setPaintProperty(LINE_LAYER_ID, "line-width", [
             "case",
-            ["==", ["get", "group_id"], groupId],
-            3,
-            1,
-          ]);
+            inGroup,
+            2.5,
+            0.5,
+          ] as mapboxgl.ExpressionSpecification);
 
           // Zoom to the bounding box of all farms in the clicked group.
           const groupFeatures = farmsRef.current.features.filter(
@@ -228,11 +461,7 @@ export const Map = ({
           );
           const bounds = new mapboxgl.LngLatBounds();
           for (const f of groupFeatures) {
-            for (const ring of f.geometry.coordinates) {
-              for (const coord of ring) {
-                bounds.extend(coord as [number, number]);
-              }
-            }
+            eachPosition(f.geometry.coordinates, (p) => bounds.extend(p));
           }
           if (!bounds.isEmpty()) {
             // Reserve room for the details panel: on the right on desktop, at
@@ -308,6 +537,17 @@ export const Map = ({
     source?.setData(farms);
   }, [farms]);
 
+  // Colour each cluster distinctly (group_id -> palette colour).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    map.setPaintProperty(
+      FILL_LAYER_ID,
+      "fill-color",
+      farmColorExpression(groups.map((g) => g.groupId)),
+    );
+  }, [groups, ready]);
+
   // On first load, fit the view to all farms (instant, so the splash reveals an
   // already-framed map). Runs once; later filtering won't re-frame the map.
   useEffect(() => {
@@ -315,9 +555,7 @@ export const Map = ({
     if (!map || !ready || didFitRef.current || farms.features.length === 0) return;
     const bounds = new mapboxgl.LngLatBounds();
     for (const f of farms.features) {
-      for (const ring of f.geometry.coordinates) {
-        for (const coord of ring) bounds.extend(coord as [number, number]);
-      }
+      eachPosition(f.geometry.coordinates, (p) => bounds.extend(p));
     }
     if (!bounds.isEmpty()) {
       map.fitBounds(bounds, { padding: 60, duration: 0 });
@@ -334,7 +572,35 @@ export const Map = ({
     map.setLayoutProperty("catchments-line", "visibility", vis(layers.catchments));
     map.setLayoutProperty("districts-fill", "visibility", vis(layers.basins));
     map.setLayoutProperty("districts-line", "visibility", vis(layers.basins));
+    map.setLayoutProperty("counties-fill", "visibility", vis(layers.counties));
+    map.setLayoutProperty("counties-line", "visibility", vis(layers.counties));
+    map.setLayoutProperty("la-fill", "visibility", vis(layers.localAuthorities));
+    map.setLayoutProperty("la-line", "visibility", vis(layers.localAuthorities));
+    map.setLayoutProperty("rivers-line", "visibility", vis(layers.rivers));
+    map.setLayoutProperty(
+      "constituencies-fill",
+      "visibility",
+      vis(layers.constituencies),
+    );
+    map.setLayoutProperty(
+      "constituencies-line",
+      "visibility",
+      vis(layers.constituencies),
+    );
+    map.setLayoutProperty("sssi-fill", "visibility", vis(layers.sssi));
+    map.setLayoutProperty("sssi-line", "visibility", vis(layers.sssi));
   }, [layers, ready]);
+
+  // Toggle the satellite basemap (vs the default Standard map).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    map.setLayoutProperty(
+      "satellite-basemap",
+      "visibility",
+      basemap === "satellite" ? "visible" : "none",
+    );
+  }, [basemap, ready]);
 
   // Scope the context layers to the river basins the search is filtering by, so
   // the overlays match the farms on screen. No filter selected → show all.
@@ -421,6 +687,13 @@ export const Map = ({
     <div className="relative w-full h-full bg-[#23263a]">
       <div ref={mapContainer} className="w-full h-full" />
 
+      {/* Data attribution for the overlays (the basemap's © Mapbox / © OSM is
+          shown by Mapbox's own control). Sits just above it, bottom-right. */}
+      <div className="pointer-events-none absolute bottom-6 right-1 z-10 max-w-[60vw] rounded bg-white/65 px-1.5 py-0.5 text-right text-[9px] leading-tight text-black/55">
+        Boundaries &amp; rivers: contains OS / ONS data © Crown copyright &amp; database
+        right 2024 (OGL v3) · Catchments &amp; river basins: © Environment Agency
+      </div>
+
       {/* Loading overlay: sits on top of the (already rendering) map and fades
           out once the first frame is painted — the expected app-load feel.
           Mirrors the Aggregate card's branding. */}
@@ -435,7 +708,7 @@ export const Map = ({
             <img src="/bubbles-orange.svg" alt="" className="h-16 w-16 shrink-0" />
             <div className="leading-tight">
               <h1 className="text-3xl font-bold tracking-tight text-slate-100/90">
-                Aggregate
+                Facilitator Forum
               </h1>
               <p className="text-sm text-white/70">Discover your local farm group</p>
             </div>
@@ -481,6 +754,10 @@ export const Map = ({
                   <dd className="min-w-0 text-gray-700">
                     {selectedStats.farmCount}
                   </dd>
+                  <dt className="font-medium text-gray-500">Area</dt>
+                  <dd className="min-w-0 text-gray-700">
+                    {Math.round(selectedStats.areaHa).toLocaleString()} ha
+                  </dd>
                 </>
               )}
               {selectedGroup.contactName && (
@@ -515,7 +792,9 @@ export const Map = ({
                   {selectedStats.districts.map((d) => (
                     <span
                       key={d}
-                      className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-900"
+                      onMouseEnter={() => highlightArea("hl-districts", d)}
+                      onMouseLeave={clearHighlight}
+                      className="inline-flex cursor-default items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-900 hover:bg-sky-200"
                     >
                       <Waves size={12} aria-hidden="true" />
                       {d}
@@ -534,9 +813,89 @@ export const Map = ({
                   {selectedStats.catchments.map((c) => (
                     <span
                       key={c.id}
-                      className="rounded-md bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-800 ring-1 ring-inset ring-sky-100"
+                      onMouseEnter={() => highlightArea("hl-catchments", c.id)}
+                      onMouseLeave={clearHighlight}
+                      className="cursor-default rounded-md bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-800 ring-1 ring-inset ring-sky-100 hover:bg-sky-100"
                     >
                       {c.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedStats && selectedStats.counties.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-medium text-gray-500">County</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStats.counties.map((c) => (
+                    <span
+                      key={c}
+                      onMouseEnter={() => highlightArea("hl-counties", c)}
+                      onMouseLeave={clearHighlight}
+                      className="cursor-default rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-200"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedStats && selectedStats.localAuthorities.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-medium text-gray-500">
+                  Local authority
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStats.localAuthorities.map((c) => (
+                    <span
+                      key={c}
+                      onMouseEnter={() => highlightArea("hl-la", c)}
+                      onMouseLeave={clearHighlight}
+                      className="cursor-default rounded-md bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-900 hover:bg-violet-200"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedStats && selectedStats.constituencies.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-medium text-gray-500">
+                  Constituency
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStats.constituencies.map((c) => (
+                    <span
+                      key={c}
+                      onMouseEnter={() => highlightArea("hl-constituencies", c)}
+                      onMouseLeave={clearHighlight}
+                      className="cursor-default rounded-md bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-900 hover:bg-rose-200"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedStats && selectedStats.sssi.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-medium text-gray-500">
+                  SSSIs ({selectedStats.sssi.length})
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStats.sssi.map((c) => (
+                    <span
+                      key={c}
+                      onMouseEnter={() => highlightArea("hl-sssi", c)}
+                      onMouseLeave={clearHighlight}
+                      className="cursor-default rounded-md bg-green-100 px-2 py-0.5 text-xs font-medium text-green-900 hover:bg-green-200"
+                    >
+                      {c}
                     </span>
                   ))}
                 </div>
@@ -566,98 +925,22 @@ export const Map = ({
                 })}
               </div>
             )}
+
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedGroup) onRemoveGroup?.(selectedGroup.groupId);
+                  clearSelection();
+                }}
+                className="mt-4 w-full rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+              >
+                Remove cluster
+              </button>
+            )}
           </div>
         )}
 
-      {/* Aggregate badge — bottom-left. Hidden on mobile while a details card
-          is open so the two don't overlap. */}
-      <div
-        className={`pointer-events-none absolute bottom-9 left-1/2 z-10 w-64 -translate-x-1/2 flex-col rounded-2xl bg-slate-500/80 px-4 py-3 shadow-lg ring-1 ring-black/5 backdrop-blur-md sm:left-4 sm:translate-x-0 ${
-          selectedGroup && selectedShown ? "hidden sm:flex" : "flex"
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => setAboutOpen((v) => !v)}
-          aria-label="About Aggregate"
-          aria-expanded={aboutOpen}
-          className="pointer-events-auto absolute right-2 top-2 rounded-full p-1 text-white/40 transition hover:bg-white/10 hover:text-white/80"
-        >
-          <Info size={15} aria-hidden="true" />
-        </button>
-
-        <div className="flex items-center gap-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/bubbles-orange.svg" alt="" className="h-11 w-11 shrink-0" />
-          <div className="leading-tight">
-            <h1 className="text-xl font-bold tracking-tight text-slate-100/90">Aggregate</h1>
-            <p className="text-xs text-white/70">Discover your local farm group</p>
-          </div>
-        </div>
-
-        <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-2.5">
-          <span className="text-xs text-white/70">Powered by</span>
-          <a
-            href="https://soilbenchmark.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Visit Soil Benchmark (opens in a new tab)"
-            className="pointer-events-auto opacity-90 transition hover:opacity-100"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/sb-logo.png" alt="SoilBenchmark" className="h-5 w-auto" />
-          </a>
-        </div>
-
-      </div>
-
-      {/* About modal — centred, blurs the whole background while open. */}
-      {aboutOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setAboutOpen(false)}
-          className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 p-6 backdrop-blur-sm"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[85dvh] w-full max-w-lg overflow-y-auto animate-[menu-pop_160ms_ease-out] rounded-2xl bg-slate-600/90 p-6 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-md sm:p-8"
-          >
-            <button
-              type="button"
-              onClick={() => setAboutOpen(false)}
-              aria-label="Close"
-              className="absolute right-3 top-3 rounded p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
-            >
-              <X size={18} />
-            </button>
-
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/bubbles-orange.svg" alt="" className="h-14 w-14 shrink-0" />
-              <h2 className="text-3xl font-bold tracking-tight text-slate-100/90">
-                Why Aggregate?
-              </h2>
-            </div>
-
-            <div className="mt-5 space-y-3.5 text-base leading-relaxed text-white/80">
-              <p>
-                Aggregate brings the farmer groups working to improve their soil
-                and water onto one shared map.
-              </p>
-              <p>
-                Search your area to find the group nearest you, then switch on
-                layers to see the river catchments and basins your land sits
-                within — the shared context behind every soil and water decision.
-              </p>
-              <p>
-                Knowing your neighbours and your landscape is where better,
-                collective stewardship of the soil begins.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

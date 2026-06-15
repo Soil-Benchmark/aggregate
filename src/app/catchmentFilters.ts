@@ -2,7 +2,8 @@
 
 // Keys must match the `water_body_type` values in the data.
 export const WATER_BODY_COLORS: Record<string, string> = {
-  River: '#2563eb',
+  // Teal — stays distinct from royal-blue major rivers and sky-blue river basins.
+  River: '#0d9488',
   Lake: '#06b6d4',
   'Groundwater Body': '#9333ea',
   'Transitional Water': '#16a34a',
