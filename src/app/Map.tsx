@@ -915,7 +915,7 @@ export const Map = ({
             {selectedStats && selectedStats.catchments.length > 0 && (
               <div className="mt-3">
                 <div className="mb-1 text-xs font-medium text-gray-500">
-                  Catchments ({selectedStats.catchments.length})
+                  Sub-catchments ({selectedStats.catchments.length})
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {selectedStats.catchments.map((c) => (

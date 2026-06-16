@@ -69,8 +69,8 @@ type Basemap = 'standard' | 'satellite';
 // Toggleable thematic overlays, grouped by theme in the layers panel.
 const WATER_LAYERS: { key: keyof LayerVisibility; label: string }[] = [
   { key: 'rivers', label: 'Major rivers' },
-  { key: 'catchments', label: 'Catchments' },
   { key: 'basins', label: 'River basins' },
+  { key: 'catchments', label: 'Sub-catchments' },
 ];
 
 const BOUNDARY_LAYERS: { key: keyof LayerVisibility; label: string }[] = [
@@ -452,7 +452,7 @@ export const MapView = () => {
     }
     const rows = adminData
       ? [
-          { label: 'Catchments', touched: touched.catchments.size, total: adminData.catchments.length },
+          { label: 'Sub-catchments', touched: touched.catchments.size, total: adminData.catchments.length },
           { label: 'River basins', touched: touched.basins.size, total: adminData.basins.length },
           { label: 'Counties / UAs', touched: touched.counties.size, total: adminData.counties.length },
           { label: 'Local authorities', touched: touched.las.size, total: adminData.las.length },
