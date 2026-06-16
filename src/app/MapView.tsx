@@ -42,6 +42,7 @@ type AdminData = {
   basins: AdminEntry[];
   catchments: AdminEntry[];
   sssi: AdminEntry[];
+  protectedLandscapes: AdminEntry[];
 };
 
 // Every boundary in `set` that the farm geometry actually intersects (bbox
@@ -79,6 +80,7 @@ const BOUNDARY_LAYERS: { key: keyof LayerVisibility; label: string }[] = [
 
 const DESIGNATION_LAYERS: { key: keyof LayerVisibility; label: string }[] = [
   { key: 'sssi', label: 'SSSIs' },
+  { key: 'protectedLandscapes', label: 'National Parks & Landscapes' },
 ];
 
 const BASEMAPS: { key: Basemap; label: string }[] = [
@@ -152,6 +154,7 @@ export const MapView = () => {
     localAuthorities: false,
     constituencies: false,
     sssi: false,
+    protectedLandscapes: false,
   });
   // Admin boundary geometries, indexed for point lookup (loaded once).
   const [adminData, setAdminData] = useState<AdminData | null>(null);
@@ -244,8 +247,9 @@ export const MapView = () => {
       fetch('/data/districts.geojson').then((r) => r.json()),
       fetch('/data/catchments.geojson').then((r) => r.json()),
       fetch('/data/sssi.geojson').then((r) => r.json()),
+      fetch('/data/protected-landscapes.geojson').then((r) => r.json()),
     ])
-      .then(([c, l, p, b, ca, s]: GeoJSON.FeatureCollection[]) => {
+      .then(([c, l, p, b, ca, s, pl]: GeoJSON.FeatureCollection[]) => {
         if (!active) return;
         const riverCatch: GeoJSON.FeatureCollection = {
           type: 'FeatureCollection',
@@ -260,6 +264,7 @@ export const MapView = () => {
           basins: index(b, 'river_basin_district'),
           catchments: index(riverCatch, 'name', 'catchment_id'),
           sssi: index(s, 'NAME'),
+          protectedLandscapes: index(pl, 'name'),
         });
       })
       .catch((err) => console.error('Failed to load admin boundaries', err));
@@ -326,6 +331,7 @@ export const MapView = () => {
         localAuthorities: string[];
         constituencies: string[];
         sssi: string[];
+        protectedLandscapes: string[];
       }
     > = {};
     const push = (arr: string[], v: string | null) => {
@@ -342,6 +348,7 @@ export const MapView = () => {
         localAuthorities: [],
         constituencies: [],
         sssi: [],
+        protectedLandscapes: [],
       });
       // A feature can represent many farms (e.g. a multi-farm shapefile) — use
       // its farm_count if present, otherwise it's a single farm.
@@ -378,6 +385,8 @@ export const MapView = () => {
           push(s.constituencies, e.name);
         for (const e of intersectingEntries(f, farmBox, adminData.sssi))
           push(s.sssi, e.name);
+        for (const e of intersectingEntries(f, farmBox, adminData.protectedLandscapes))
+          push(s.protectedLandscapes, e.name);
       }
     }
     return stats;
@@ -402,6 +411,7 @@ export const MapView = () => {
       las: new Set<string>(),
       cons: new Set<string>(),
       sssi: new Set<string>(),
+      pl: new Set<string>(),
     };
     for (const gid of Object.keys(groupStats)) {
       const s = groupStats[gid];
@@ -413,6 +423,7 @@ export const MapView = () => {
       s.localAuthorities.forEach((x) => touched.las.add(x));
       s.constituencies.forEach((x) => touched.cons.add(x));
       s.sssi.forEach((x) => touched.sssi.add(x));
+      s.protectedLandscapes.forEach((x) => touched.pl.add(x));
     }
     const rows = adminData
       ? [
@@ -422,6 +433,7 @@ export const MapView = () => {
           { label: 'Local authorities', touched: touched.las.size, total: adminData.las.length },
           { label: 'Constituencies', touched: touched.cons.size, total: adminData.cons.length },
           { label: 'SSSIs', touched: touched.sssi.size, total: adminData.sssi.length },
+          { label: 'Nat. Parks & Landscapes', touched: touched.pl.size, total: adminData.protectedLandscapes.length },
         ]
       : [];
     return { clusters: data.groups.length, farms, areaHa, rows, ready: !!adminData };

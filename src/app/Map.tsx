@@ -24,6 +24,7 @@ const HIGHLIGHT_LAYERS = [
   { id: "hl-la", source: "local-authorities", field: "LAD24NM" },
   { id: "hl-constituencies", source: "constituencies", field: "PCON24NM" },
   { id: "hl-sssi", source: "sssi", field: "NAME" },
+  { id: "hl-pl", source: "protected-landscapes", field: "name" },
 ] as const;
 
 // Fallback farm fill (used before groups load / for unknown groups).
@@ -56,6 +57,18 @@ const farmColorExpression = (
   ] as mapboxgl.ExpressionSpecification;
 };
 
+// Protected landscapes: National Parks (green) vs National Landscapes / AONBs
+// (olive) — both greens (designation family), distinct from each other.
+const protectedColor = [
+  "match",
+  ["get", "kind"],
+  "national_park",
+  "#166534",
+  "national_landscape",
+  "#4d7c0f",
+  "#166534",
+] as mapboxgl.ExpressionSpecification;
+
 // Mapbox match expression: water_body_type -> colour.
 const waterBodyColor = [
   "match",
@@ -85,6 +98,7 @@ export type LayerVisibility = {
   localAuthorities: boolean;
   constituencies: boolean;
   sssi: boolean;
+  protectedLandscapes: boolean;
 };
 
 export type GroupStats = {
@@ -96,6 +110,7 @@ export type GroupStats = {
   localAuthorities: string[];
   constituencies: string[];
   sssi: string[];
+  protectedLandscapes: string[];
 };
 
 type MapProps = {
@@ -199,6 +214,7 @@ export const Map = ({
         riversData,
         constituenciesData,
         sssiData,
+        protectedData,
       ] = await Promise.all([
         fetch("/data/catchments.geojson").then((r) => r.json()),
         fetch("/data/districts.geojson").then((r) => r.json()),
@@ -207,6 +223,7 @@ export const Map = ({
         fetch("/data/rivers.geojson").then((r) => r.json()),
         fetch("/data/constituencies.geojson").then((r) => r.json()),
         fetch("/data/sssi.geojson").then((r) => r.json()),
+        fetch("/data/protected-landscapes.geojson").then((r) => r.json()),
       ]);
       if (cancelled || !mapContainer.current || mapRef.current) return;
 
@@ -359,6 +376,27 @@ export const Map = ({
           source: "sssi",
           layout: { visibility: "none" },
           paint: { "line-color": "#166534", "line-width": 1 },
+        });
+
+        // National Parks (green) & National Landscapes / AONBs (olive).
+        // Hidden by default.
+        map.addSource("protected-landscapes", {
+          type: "geojson",
+          data: protectedData,
+        });
+        map.addLayer({
+          id: "pl-fill",
+          type: "fill",
+          source: "protected-landscapes",
+          layout: { visibility: "none" },
+          paint: { "fill-color": protectedColor, "fill-opacity": 0.2 },
+        });
+        map.addLayer({
+          id: "pl-line",
+          type: "line",
+          source: "protected-landscapes",
+          layout: { visibility: "none" },
+          paint: { "line-color": protectedColor, "line-width": 1.4 },
         });
 
         // Farms on top (data comes from props; updated via setData below).
@@ -589,6 +627,8 @@ export const Map = ({
     );
     map.setLayoutProperty("sssi-fill", "visibility", vis(layers.sssi));
     map.setLayoutProperty("sssi-line", "visibility", vis(layers.sssi));
+    map.setLayoutProperty("pl-fill", "visibility", vis(layers.protectedLandscapes));
+    map.setLayoutProperty("pl-line", "visibility", vis(layers.protectedLandscapes));
   }, [layers, ready]);
 
   // Toggle the satellite basemap (vs the default Standard map).
@@ -894,6 +934,26 @@ export const Map = ({
                       onMouseEnter={() => highlightArea("hl-sssi", c)}
                       onMouseLeave={clearHighlight}
                       className="cursor-default rounded-md bg-green-100 px-2 py-0.5 text-xs font-medium text-green-900 hover:bg-green-200"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedStats && selectedStats.protectedLandscapes.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-medium text-gray-500">
+                  National Parks &amp; Landscapes
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStats.protectedLandscapes.map((c) => (
+                    <span
+                      key={c}
+                      onMouseEnter={() => highlightArea("hl-pl", c)}
+                      onMouseLeave={clearHighlight}
+                      className="cursor-default rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-900 hover:bg-emerald-200"
                     >
                       {c}
                     </span>
