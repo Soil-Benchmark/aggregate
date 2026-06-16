@@ -357,6 +357,7 @@ export const AddDialog = ({
           groupId: `local-${Date.now()}`,
           name,
           description,
+          website,
           contactName,
           contactEmail,
           labels: chosenLabels,
@@ -410,6 +411,14 @@ export const AddDialog = ({
     </div>
   );
 
+  // What the worm loader says while we work.
+  const loadingLabel =
+    mode === 'cluster'
+      ? 'Adding your cluster…'
+      : farmMethod === 'sbi'
+        ? 'Fetching farm boundaries…'
+        : 'Adding your farm…';
+
   return (
     <div
       role="dialog"
@@ -421,6 +430,26 @@ export const AddDialog = ({
         onClick={(e) => e.stopPropagation()}
         className="relative max-h-[88dvh] w-full max-w-md overflow-y-auto animate-[menu-pop_160ms_ease-out] rounded-2xl bg-[#2e4d34]/95 p-6 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-md"
       >
+        {/* Worm loader — the same wiggling worm the main Soil Benchmark app shows
+            while it fetches farm boundaries. Covers the form while we work. */}
+        {submitting && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-5 rounded-2xl bg-[#2e4d34]/97 px-6 text-center backdrop-blur-md">
+            <div className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/bubbles-orange.svg" alt="" className="h-9 w-9" />
+              <span className="text-xl font-bold tracking-tight text-slate-100/90">
+                Facilitator Forum
+              </span>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/loading_fat_worm.svg" alt="Loading" className="h-20 w-20" />
+            <p className="text-base font-medium text-white/85">{loadingLabel}</p>
+            <p className="max-w-xs text-xs text-white/50">
+              This can take a moment while we fetch and tidy up the boundaries.
+            </p>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={onClose}
