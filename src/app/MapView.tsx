@@ -29,7 +29,6 @@ import {
 import { applyFilters, type Filter } from '@/lib/filters';
 import area from '@turf/area';
 import bbox from '@turf/bbox';
-import centroid from '@turf/centroid';
 import booleanIntersects from '@turf/boolean-intersects';
 import union from '@turf/union';
 import { cn } from '@/lib/utils';
@@ -336,18 +335,6 @@ export const MapView = () => {
     return { type: 'FeatureCollection', features };
   }, [visibleFarms]);
 
-  // One point per cluster (its centroid), carrying group_id so the map can draw a
-  // distinctly-coloured dot for each cluster — visible when zoomed out to GB,
-  // where the polygons themselves are too small to tell apart by colour.
-  const clusterDots = useMemo<GeoJSON.FeatureCollection>(() => {
-    const features = dissolvedFarms.features.map((f) => {
-      const c = centroid(f);
-      c.properties = { group_id: f.properties.group_id };
-      return c;
-    });
-    return { type: 'FeatureCollection', features };
-  }, [dissolvedFarms]);
-
   // Per-group facts for the details card: how many farms, which river basin
   // districts they span, and which (river) catchments they intersect. Computed
   // from the full dataset, not the filtered view.
@@ -482,7 +469,6 @@ export const MapView = () => {
     <>
       <Map
         farms={dissolvedFarms}
-        clusterDots={clusterDots}
         groups={data.groups}
         labels={data.labels}
         layers={layers}

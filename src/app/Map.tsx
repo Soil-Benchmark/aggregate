@@ -125,7 +125,6 @@ export type GroupStats = {
 
 type MapProps = {
   farms: FarmsGeoJSON;
-  clusterDots: GeoJSON.FeatureCollection;
   groups: FarmGroup[];
   labels: Label[];
   layers: LayerVisibility;
@@ -139,7 +138,6 @@ type MapProps = {
 
 export const Map = ({
   farms,
-  clusterDots,
   groups,
   labels,
   layers,
@@ -155,7 +153,6 @@ export const Map = ({
   const loadedRef = useRef(false);
   const didFitRef = useRef(false);
   const farmsRef = useRef<FarmsGeoJSON>(farms);
-  const clusterDotsRef = useRef<GeoJSON.FeatureCollection>(clusterDots);
   const groupsRef = useRef<FarmGroup[]>(groups);
   const [selectedGroup, setSelectedGroup] = useState<FarmGroup | null>(null);
   // Fade the map in once it has actually painted, to avoid a blank/white flash.
@@ -211,7 +208,6 @@ export const Map = ({
   // Keep the latest data in refs so the one-time `load`/click handlers can read it.
   useEffect(() => {
     farmsRef.current = farms;
-    clusterDotsRef.current = clusterDots;
     groupsRef.current = groups;
   });
 
@@ -447,36 +443,6 @@ export const Map = ({
           paint: { "line-color": FARM_LINE, "line-width": 0.8 },
         });
 
-        // One coloured dot per cluster (at its centroid), so each cluster reads
-        // as a distinct colour when zoomed out to GB — where the polygons are too
-        // small to tell apart. Fades out as you zoom in and the fills take over.
-        map.addSource("cluster-dots", {
-          type: "geojson",
-          data: clusterDotsRef.current,
-        });
-        map.addLayer({
-          id: "cluster-dots",
-          type: "circle",
-          source: "cluster-dots",
-          paint: {
-            "circle-color": FARM_FILL,
-            "circle-radius": [
-              "interpolate", ["linear"], ["zoom"],
-              4, 6.5, 6.5, 5.5, 9, 3.5, 11, 0,
-            ],
-            "circle-stroke-width": [
-              "interpolate", ["linear"], ["zoom"], 4, 1.5, 10, 0.5, 11, 0,
-            ],
-            "circle-stroke-color": "#ffffff",
-            "circle-opacity": [
-              "interpolate", ["linear"], ["zoom"], 8.5, 1, 10.5, 0,
-            ],
-            "circle-stroke-opacity": [
-              "interpolate", ["linear"], ["zoom"], 8.5, 1, 10.5, 0,
-            ],
-          },
-        });
-
         // Satellite basemap, inserted just below the overlays so the farms /
         // catchments still sit on top. Hidden by default (Standard map); the
         // "map layers" control toggles it on for a satellite view.
@@ -638,25 +604,15 @@ export const Map = ({
     source?.setData(farms);
   }, [farms]);
 
-  // Keep the cluster dots in sync with the (filtered) clusters.
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !loadedRef.current) return;
-    const source = map.getSource("cluster-dots") as
-      | mapboxgl.GeoJSONSource
-      | undefined;
-    source?.setData(clusterDots);
-  }, [clusterDots]);
-
   // Colour each cluster distinctly (group_id -> palette colour).
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    const expr = farmColorExpression(groups.map((g) => g.groupId));
-    map.setPaintProperty(FILL_LAYER_ID, "fill-color", expr);
-    if (map.getLayer("cluster-dots")) {
-      map.setPaintProperty("cluster-dots", "circle-color", expr);
-    }
+    map.setPaintProperty(
+      FILL_LAYER_ID,
+      "fill-color",
+      farmColorExpression(groups.map((g) => g.groupId)),
+    );
   }, [groups, ready]);
 
   // On first load, frame the whole of GB (so Scotland & Wales are visible, not
