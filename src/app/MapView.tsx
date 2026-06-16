@@ -599,8 +599,8 @@ export const MapView = () => {
             <button
               type="button"
               onClick={() => setAddOpen(true)}
-              aria-label="Add a cluster or farm"
-              title="Add a cluster or farm"
+              aria-label="Add a group or farm"
+              title="Add a group or farm"
               className={barBtn}
             >
               <Plus size={22} aria-hidden="true" />
@@ -779,7 +779,7 @@ export const MapView = () => {
             <div className="mt-4 grid grid-cols-3 gap-2">
               <div className="rounded-xl bg-white/10 p-3">
                 <div className="text-2xl font-bold">{mapStats.clusters.toLocaleString()}</div>
-                <div className="text-xs text-white/60">Clusters</div>
+                <div className="text-xs text-white/60">Groups</div>
               </div>
               <div className="rounded-xl bg-white/10 p-3">
                 <div className="text-2xl font-bold">{mapStats.farms.toLocaleString()}</div>
@@ -794,7 +794,7 @@ export const MapView = () => {
             </div>
 
             <div className="mt-5 text-xs font-medium uppercase tracking-wider text-white/50">
-              Areas with a cluster in them
+              Areas with a group in them
             </div>
             <div className="mt-2 space-y-1.5">
               {mapStats.ready ? (

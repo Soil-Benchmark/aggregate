@@ -1105,7 +1105,7 @@ export const Map = ({
                 }}
                 className="mt-4 w-full rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
               >
-                Remove cluster
+                Remove group
               </button>
             )}
           </div>

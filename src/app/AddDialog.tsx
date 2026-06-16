@@ -193,7 +193,7 @@ export const AddDialog = ({
     }) as unknown as FarmFeature;
 
   const submitFarmPostcode = async () => {
-    if (!farmGroupId) return setError('Choose a cluster.');
+    if (!farmGroupId) return setError('Choose a group.');
     if (!picked) return setError('Search for and choose an address first.');
     const ha = Number(hectares);
     if (!(ha > 0)) return setError('Enter a farm size in hectares.');
@@ -249,7 +249,7 @@ export const AddDialog = ({
   // Parse an uploaded shapefile (.zip) or GeoJSON, reproject if needed, merge
   // the parcels, and add it to the cluster in this session (no live write).
   const submitShapefile = async () => {
-    if (!farmGroupId) return setError('Choose a cluster.');
+    if (!farmGroupId) return setError('Choose a group.');
     if (!farmFile) return setError('Choose a shapefile (.zip) or GeoJSON to upload.');
     setSubmitting(true);
     setError(null);
@@ -273,7 +273,7 @@ export const AddDialog = ({
   // (via our read-only /api/sbi proxy) and adds them to the map in this session
   // only. It does NOT write to the live database.
   const submitSbi = async () => {
-    if (!farmGroupId) return setError('Choose a cluster.');
+    if (!farmGroupId) return setError('Choose a group.');
     const sbiList = sbis
       .split(/[\s,]+/)
       .map((s) => s.trim())
@@ -404,7 +404,7 @@ export const AddDialog = ({
       }
       onClose();
     } catch (err) {
-      setError(`Could not create cluster: ${err}`);
+      setError(`Could not create group: ${err}`);
     } finally {
       setSubmitting(false);
     }
@@ -417,14 +417,14 @@ export const AddDialog = ({
 
   const clusterSelect = (
     <div>
-      <label className={labelClass}>Cluster</label>
+      <label className={labelClass}>Group</label>
       <select
         value={farmGroupId}
         onChange={(e) => setFarmGroupId(e.target.value)}
         className={cn(inputClass, 'appearance-none')}
       >
         <option value="" className="text-gray-900">
-          Choose a cluster…
+          Choose a group…
         </option>
         {sortedGroups.map((g) => (
           <option key={g.groupId} value={g.groupId} className="text-gray-900">
@@ -438,7 +438,7 @@ export const AddDialog = ({
   // What the worm loader says while we work.
   const loadingLabel =
     mode === 'cluster'
-      ? 'Adding your cluster…'
+      ? 'Adding your group…'
       : farmMethod === 'sbi'
         ? 'Fetching farm boundaries…'
         : 'Adding your farm…';
@@ -507,7 +507,7 @@ export const AddDialog = ({
               Add to the map
             </h2>
             <p className="mt-1 text-sm text-white/70">
-              Register a new farmer cluster, or add a farm to an existing one.
+              Register a new farmer group, or add a farm to an existing one.
             </p>
             <div className="mt-4 grid gap-3">
               <button
@@ -517,7 +517,7 @@ export const AddDialog = ({
               >
                 <Users size={22} className="shrink-0 text-[#ff9933]" />
                 <span>
-                  <span className="block text-sm font-semibold">Add a cluster</span>
+                  <span className="block text-sm font-semibold">Add a group</span>
                   <span className="block text-xs text-white/60">
                     Register a new farmer group — and optionally add its farms in
                     one go.
@@ -533,7 +533,7 @@ export const AddDialog = ({
                 <span>
                   <span className="block text-sm font-semibold">Add a farm</span>
                   <span className="block text-xs text-white/60">
-                    Add a farm to an existing cluster by shapefile or SBI.
+                    Add a farm to an existing group by shapefile or SBI.
                   </span>
                 </span>
               </button>
@@ -547,12 +547,12 @@ export const AddDialog = ({
         {mode === 'cluster' && (
           <>
             <h2 className="text-xl font-bold tracking-tight text-slate-100/90">
-              Add a cluster
+              Add a group
             </h2>
 
             <div className="mt-4 space-y-4">
               <div>
-                <label className={labelClass}>Cluster name</label>
+                <label className={labelClass}>Group name</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -566,7 +566,7 @@ export const AddDialog = ({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  placeholder="What the cluster is about"
+                  placeholder="What the group is about"
                   className={cn(inputClass, 'resize-none')}
                 />
               </div>
@@ -627,10 +627,10 @@ export const AddDialog = ({
               {/* Optional: seed the cluster's farms from one shapefile. */}
               <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
                 <label className={labelClass}>
-                  Add this cluster&rsquo;s farms now (optional)
+                  Add this group&rsquo;s farms now (optional)
                 </label>
                 <p className="mb-2 text-[11px] text-white/45">
-                  Upload one shapefile containing all the cluster&rsquo;s farms, then
+                  Upload one shapefile containing all the group&rsquo;s farms, then
                   tell us how many farms it represents.
                 </p>
                 <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm ring-1 ring-white/15 transition hover:bg-white/15">
@@ -671,7 +671,7 @@ export const AddDialog = ({
                 disabled={submitting}
                 className={primaryBtn}
               >
-                {submitting ? 'Adding…' : 'Add cluster'}
+                {submitting ? 'Adding…' : 'Add group'}
               </button>
             </div>
           </>
