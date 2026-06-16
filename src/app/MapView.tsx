@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type mapboxgl from 'mapbox-gl';
 import {
   BarChart3,
@@ -161,6 +161,8 @@ export const MapView = () => {
   });
   // Admin boundary geometries, indexed for point lookup (loaded once).
   const [adminData, setAdminData] = useState<AdminData | null>(null);
+  // Wrapper around the overlays button + panel, so a click anywhere else closes it.
+  const layersRef = useRef<HTMLDivElement>(null);
   // Demo stub: only authorised users can add clusters/farms. Flip to false to
   // preview the public (read-only) view. Real auth comes later.
   const isAuthorised = true;
@@ -277,6 +279,18 @@ export const MapView = () => {
       active = false;
     };
   }, []);
+
+  // Close the overlays panel when clicking anywhere outside it (incl. the map).
+  useEffect(() => {
+    if (!layersOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (layersRef.current && !layersRef.current.contains(e.target as Node)) {
+        setLayersOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [layersOpen]);
 
   const visibleFarms = useMemo(
     () => applyFilters(data.farms, data.groups, filters),
@@ -445,7 +459,7 @@ export const MapView = () => {
           { label: 'Constituencies', touched: touched.cons.size, total: adminData.cons.length },
           { label: 'SSSIs', touched: touched.sssi.size, total: adminData.sssi.length },
           { label: 'Nat. Parks & Landscapes', touched: touched.pl.size, total: adminData.protectedLandscapes.length },
-          { label: 'NVZ types', touched: touched.nvz.size, total: adminData.nvz.length },
+          { label: 'NVZs', touched: touched.nvz.size, total: adminData.nvz.length },
         ]
       : [];
     return { clusters: data.groups.length, farms, areaHa, rows, ready: !!adminData };
@@ -510,7 +524,7 @@ export const MapView = () => {
           </div>
 
           {/* Overlays panel (Water + Boundaries). */}
-          <div className="relative shrink-0">
+          <div ref={layersRef} className="relative shrink-0">
             <button
               type="button"
               onClick={() => setLayersOpen((v) => !v)}
@@ -523,7 +537,7 @@ export const MapView = () => {
             </button>
 
             {layersOpen && (
-              <div className="absolute right-0 top-[52px] z-40 w-60 origin-top-right animate-[menu-pop_160ms_ease-out] rounded-2xl bg-[#2e4d34]/95 p-3 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md">
+              <div className="absolute right-0 top-[52px] z-40 w-72 origin-top-right animate-[menu-pop_160ms_ease-out] rounded-2xl bg-[#2e4d34]/95 p-3 text-white shadow-xl ring-1 ring-black/5 backdrop-blur-md">
                 {/* Water */}
                 <div className="flex w-fit items-center gap-1.5 rounded-lg bg-sky-200 px-2.5 py-1 text-sm font-medium text-sky-950">
                   <Waves size={16} aria-hidden="true" />

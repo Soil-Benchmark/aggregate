@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, Hash, MapPin, Tractor, Upload, Users, X } from 'lucide-react';
 import type { FarmFeature, FarmGroup, Label } from '@/lib/farmData';
 import union from '@turf/union';
+import buffer from '@turf/buffer';
 import proj4 from 'proj4';
 import { cn, readableText } from '@/lib/utils';
 
@@ -199,21 +200,44 @@ export const AddDialog = ({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch('/api/farms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: farmGroupId,
-          lng: picked.lng,
-          lat: picked.lat,
-          hectares: ha,
-          postcode: picked.postcode,
-          address: picked.label,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to add farm');
-      onFarmAdded(data.farm);
+      let farm: FarmFeature | null = null;
+      // Try the live API; if storage isn't configured (local dev / no GCS),
+      // fall back to building the circle client-side (session only) — same as
+      // the cluster/shapefile/SBI routes, so the postcode add never dead-ends.
+      try {
+        const res = await fetch('/api/farms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupId: farmGroupId,
+            lng: picked.lng,
+            lat: picked.lat,
+            hectares: ha,
+            postcode: picked.postcode,
+            address: picked.label,
+          }),
+        });
+        if (res.ok) farm = (await res.json()).farm;
+      } catch {
+        // ignore — fall back to local
+      }
+      if (!farm) {
+        // Circle whose area equals the stated hectares: radius = sqrt(area/π).
+        // Mirrors the /api/farms server logic with turf buffer.
+        const point: GeoJSON.Feature<GeoJSON.Point> = {
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'Point', coordinates: [picked.lng, picked.lat] },
+        };
+        const radiusMetres = Math.sqrt((ha * 10000) / Math.PI);
+        const circle = buffer(point, radiusMetres, { units: 'meters', steps: 24 });
+        if (!circle) {
+          setError('Failed to compute farm geometry.');
+          return;
+        }
+        farm = makeFarm(circle.geometry, farmGroupId, `pc-${Date.now()}`);
+      }
+      onFarmAdded(farm);
       onClose();
     } catch (err) {
       setError(String(err));
