@@ -466,7 +466,11 @@ export const AddDialog = ({
               </span>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/loading_fat_worm.svg" alt="Loading" className="h-20 w-20" />
+            <img
+              src="/loading_fat_worm_static.svg"
+              alt="Loading"
+              className="h-20 w-20 animate-spin [animation-duration:1.6s] [will-change:transform]"
+            />
             <p className="text-base font-medium text-white/85">{loadingLabel}</p>
             <p className="max-w-xs text-xs text-white/50">
               This can take a moment while we fetch and tidy up the boundaries.

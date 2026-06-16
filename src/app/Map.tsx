@@ -778,8 +778,16 @@ export const Map = ({
             </div>
           </div>
 
+          {/* Static worm spun via a GPU-composited transform (Tailwind animate-spin)
+              so it stays perfectly smooth even while the big GeoJSON files parse on
+              the main thread — the SVG's own internal animation jankily ran on the
+              main thread. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/loading_fat_worm.svg" alt="Loading" className="h-16 w-16" />
+          <img
+            src="/loading_fat_worm_static.svg"
+            alt="Loading"
+            className="h-16 w-16 animate-spin [animation-duration:1.6s] [will-change:transform]"
+          />
 
           <div className="flex items-center gap-2 opacity-90">
             <span className="text-xs text-white/60">Powered by</span>
