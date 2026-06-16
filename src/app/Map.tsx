@@ -428,6 +428,26 @@ export const Map = ({
           paint: { "line-color": "#b91c1c", "line-width": 1 },
         });
 
+        // Highlight for the river-basin search: when the user filters by river
+        // basin(s), shade those basin areas (like the hover-highlight on the
+        // popup chips). Sits just below the farms so clusters stay on top.
+        map.addLayer({
+          id: "basin-search-fill",
+          type: "fill",
+          source: "districts",
+          layout: { visibility: "none" },
+          filter: ["in", ["get", "river_basin_district"], ["literal", []]],
+          paint: { "fill-color": "#fde047", "fill-opacity": 0.22 },
+        });
+        map.addLayer({
+          id: "basin-search-line",
+          type: "line",
+          source: "districts",
+          layout: { visibility: "none" },
+          filter: ["in", ["get", "river_basin_district"], ["literal", []]],
+          paint: { "line-color": "#f59e0b", "line-width": 2.5 },
+        });
+
         // Farms on top (data comes from props; updated via setData below).
         map.addSource("farms", { type: "geojson", data: farmsRef.current });
         map.addLayer({
@@ -683,6 +703,19 @@ export const Map = ({
       "districts-line",
     ]) {
       map.setFilter(id, filter);
+    }
+
+    // Highlight the searched basin areas (shade + outline), like hovering a chip.
+    const on = activeDistricts.length > 0;
+    const basinFilter = [
+      "in",
+      ["get", "river_basin_district"],
+      ["literal", on ? activeDistricts : []],
+    ] as mapboxgl.FilterSpecification;
+    const vis = on ? "visible" : "none";
+    for (const id of ["basin-search-fill", "basin-search-line"]) {
+      map.setFilter(id, basinFilter);
+      map.setLayoutProperty(id, "visibility", vis);
     }
   }, [activeDistricts, ready]);
 
