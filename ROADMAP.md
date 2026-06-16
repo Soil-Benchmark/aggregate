@@ -45,8 +45,14 @@ never write to the live store.
 - Rivers (major, named >35km): OS Open Rivers (GeoPackage).
 - Catchments: EA (England) + SEPA layer 8 intercatchments (Scotland) + NRW WFD river
   waterbody catchments (Wales, DataMapWales WFS).
-- River basin districts: EA + SEPA + NRW, **dissolved by name** so cross-border (Dee,
-  Severn, Solway Tweed, Western Wales, Scotland) are whole.
+- River basins: EA **WFD Surface Water Management Catchments Cycle 2** (103, England),
+  split by major river (Tyne, Wear, Tees, Lower Mersey, Ribble, Weaver Gowy, Lower Trent,
+  Yorkshire Ouse…) - the "rivers that drain to the sea" granularity Tom wanted. Stored in
+  `districts.geojson` under field `river_basin_district` (kept the old field name so all
+  wiring is unchanged). Seed farms re-baked to their management catchment via
+  `scripts/rebake-basins.mjs`. NB England only (EA); Scotland/Wales basins still TODO.
+  (Superseded the old coarse RBD dissolve, which had corrupted geometry - North West
+  wrongly spanning NE England, Dee null, etc.)
 - Counties/UAs + Local authorities + Westminster constituencies: ONS (Open Geography).
 - SSSIs: Natural England (England only so far).
 - **SBI → farm boundary**: public DEFRA RPA "LandCovers" WFS, no auth —
