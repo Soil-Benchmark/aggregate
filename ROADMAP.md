@@ -48,8 +48,10 @@ never write to the live store.
 - River basins: **GB-wide, 132 features**, split by major river ("rivers that drain to
   the sea" - Tyne/Wear/Tees, Trent/Ouse separate, etc.). England = EA WFD Surface Water
   Management Catchments Cycle 2 (103); Wales = NRW WFD Management Catchments C2 (19,
-  DataMapWales `inspire-nrw:NRW_WFD_MGT_CATCHMENTS_C2`); Scotland = SEPA WFD Sub Units
-  (10, map.sepa.org.uk Open/Hydrography layer 7 - Tay, Clyde, Forth, Tweed, Solway…).
+  DataMapWales `inspire-nrw:NRW_WFD_MGT_CATCHMENTS_C2`); Scotland = SEPA "Main river and coastal
+  catchments" (map.sepa.org.uk Open/Hydrography layer 12) filtered to >400 km² (~48,
+  major rivers: Dee/Grampian, Don, Deveron, Spey, Tay, Forth, Tweed, Nith, Findhorn,
+  Ythan… - replaced the old 10 WFD Sub Units which lumped NE Scotland's rivers together).
   All stored in `districts.geojson` under field `river_basin_district` (kept the old field
   name so all wiring is unchanged). Seed farms (all England) re-baked via
   `scripts/rebake-basins.mjs`. (Superseded the old coarse RBD dissolve, which had
