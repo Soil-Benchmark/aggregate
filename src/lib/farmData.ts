@@ -11,6 +11,7 @@ export type FarmGroup = {
   description: string;
   contactName: string;
   contactEmail: string;
+  website?: string;
   labels: string[];
 };
 

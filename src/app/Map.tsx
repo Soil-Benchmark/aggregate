@@ -25,6 +25,7 @@ const HIGHLIGHT_LAYERS = [
   { id: "hl-constituencies", source: "constituencies", field: "PCON24NM" },
   { id: "hl-sssi", source: "sssi", field: "NAME" },
   { id: "hl-pl", source: "protected-landscapes", field: "name" },
+  { id: "hl-nvz", source: "nvz", field: "name" },
 ] as const;
 
 // Fallback farm fill (used before groups load / for unknown groups).
@@ -99,6 +100,7 @@ export type LayerVisibility = {
   constituencies: boolean;
   sssi: boolean;
   protectedLandscapes: boolean;
+  nvz: boolean;
 };
 
 export type GroupStats = {
@@ -111,6 +113,7 @@ export type GroupStats = {
   constituencies: string[];
   sssi: string[];
   protectedLandscapes: string[];
+  nvz: string[];
 };
 
 type MapProps = {
@@ -215,6 +218,7 @@ export const Map = ({
         constituenciesData,
         sssiData,
         protectedData,
+        nvzData,
       ] = await Promise.all([
         fetch("/data/catchments.geojson").then((r) => r.json()),
         fetch("/data/districts.geojson").then((r) => r.json()),
@@ -224,6 +228,7 @@ export const Map = ({
         fetch("/data/constituencies.geojson").then((r) => r.json()),
         fetch("/data/sssi.geojson").then((r) => r.json()),
         fetch("/data/protected-landscapes.geojson").then((r) => r.json()),
+        fetch("/data/nvz.geojson").then((r) => r.json()),
       ]);
       if (cancelled || !mapContainer.current || mapRef.current) return;
 
@@ -397,6 +402,23 @@ export const Map = ({
           source: "protected-landscapes",
           layout: { visibility: "none" },
           paint: { "line-color": protectedColor, "line-width": 1.4 },
+        });
+
+        // Nitrate Vulnerable Zones (brick red), by type. Hidden by default.
+        map.addSource("nvz", { type: "geojson", data: nvzData });
+        map.addLayer({
+          id: "nvz-fill",
+          type: "fill",
+          source: "nvz",
+          layout: { visibility: "none" },
+          paint: { "fill-color": "#dc2626", "fill-opacity": 0.16 },
+        });
+        map.addLayer({
+          id: "nvz-line",
+          type: "line",
+          source: "nvz",
+          layout: { visibility: "none" },
+          paint: { "line-color": "#b91c1c", "line-width": 1 },
         });
 
         // Farms on top (data comes from props; updated via setData below).
@@ -629,6 +651,8 @@ export const Map = ({
     map.setLayoutProperty("sssi-line", "visibility", vis(layers.sssi));
     map.setLayoutProperty("pl-fill", "visibility", vis(layers.protectedLandscapes));
     map.setLayoutProperty("pl-line", "visibility", vis(layers.protectedLandscapes));
+    map.setLayoutProperty("nvz-fill", "visibility", vis(layers.nvz));
+    map.setLayoutProperty("nvz-line", "visibility", vis(layers.nvz));
   }, [layers, ready]);
 
   // Toggle the satellite basemap (vs the default Standard map).
@@ -821,12 +845,56 @@ export const Map = ({
                   </dd>
                 </>
               )}
+              {selectedGroup.website && (
+                <>
+                  <dt className="font-medium text-gray-500">Website</dt>
+                  <dd className="min-w-0">
+                    <a
+                      href={
+                        /^https?:\/\//.test(selectedGroup.website)
+                          ? selectedGroup.website
+                          : `https://${selectedGroup.website}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-600 hover:underline break-all"
+                    >
+                      {selectedGroup.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  </dd>
+                </>
+              )}
             </dl>
+
+            {/* Thematic labels shown above the overlap sections. */}
+            {selectedGroup.labels.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {selectedGroup.labels.map((label) => {
+                  const color = labelColors[label];
+                  return (
+                    <Badge
+                      key={label}
+                      className="rounded-full border-transparent px-3 py-1 text-xs font-semibold"
+                      style={
+                        color
+                          ? {
+                              backgroundColor: color,
+                              color: readableText(color),
+                            }
+                          : undefined
+                      }
+                    >
+                      {label}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
 
             {selectedStats && selectedStats.districts.length > 0 && (
               <div className="mt-3">
                 <div className="mb-1 text-xs font-medium text-gray-500">
-                  River basin
+                  River basin ({selectedStats.districts.length})
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedStats.districts.map((d) => (
@@ -866,7 +934,9 @@ export const Map = ({
 
             {selectedStats && selectedStats.counties.length > 0 && (
               <div className="mt-3">
-                <div className="mb-1 text-xs font-medium text-gray-500">County</div>
+                <div className="mb-1 text-xs font-medium text-gray-500">
+                  County ({selectedStats.counties.length})
+                </div>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedStats.counties.map((c) => (
                     <span
@@ -885,7 +955,7 @@ export const Map = ({
             {selectedStats && selectedStats.localAuthorities.length > 0 && (
               <div className="mt-3">
                 <div className="mb-1 text-xs font-medium text-gray-500">
-                  Local authority
+                  Local authority ({selectedStats.localAuthorities.length})
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedStats.localAuthorities.map((c) => (
@@ -905,7 +975,7 @@ export const Map = ({
             {selectedStats && selectedStats.constituencies.length > 0 && (
               <div className="mt-3">
                 <div className="mb-1 text-xs font-medium text-gray-500">
-                  Constituency
+                  Constituency ({selectedStats.constituencies.length})
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedStats.constituencies.map((c) => (
@@ -945,7 +1015,8 @@ export const Map = ({
             {selectedStats && selectedStats.protectedLandscapes.length > 0 && (
               <div className="mt-3">
                 <div className="mb-1 text-xs font-medium text-gray-500">
-                  National Parks &amp; Landscapes
+                  National Parks &amp; Landscapes (
+                  {selectedStats.protectedLandscapes.length})
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedStats.protectedLandscapes.map((c) => (
@@ -962,27 +1033,23 @@ export const Map = ({
               </div>
             )}
 
-            {selectedGroup.labels.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {selectedGroup.labels.map((label) => {
-                  const color = labelColors[label];
-                  return (
-                    <Badge
-                      key={label}
-                      className="rounded-full border-transparent px-3 py-1 text-xs font-semibold"
-                      style={
-                        color
-                          ? {
-                              backgroundColor: color,
-                              color: readableText(color),
-                            }
-                          : undefined
-                      }
+            {selectedStats && selectedStats.nvz.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-medium text-gray-500">
+                  Nitrate Vulnerable Zones ({selectedStats.nvz.length})
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedStats.nvz.map((c) => (
+                    <span
+                      key={c}
+                      onMouseEnter={() => highlightArea("hl-nvz", c)}
+                      onMouseLeave={clearHighlight}
+                      className="cursor-default rounded-md bg-red-100 px-2 py-0.5 text-xs font-medium text-red-900 hover:bg-red-200"
                     >
-                      {label}
-                    </Badge>
-                  );
-                })}
+                      {c}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
