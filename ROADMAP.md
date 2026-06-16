@@ -36,7 +36,10 @@ never write to the live store.
 - "Remove cluster" (authorised) in the popup. 📊 Map-stats panel (clusters/farms/area +
   touched/total per layer). Map-type switch (Standard/Satellite). Discreet "Powered by Soil Benchmark".
 - Layers panel: **Water** (rivers, catchments, river basins), **Boundaries** (counties,
-  local authorities, constituencies), **Designations** (SSSIs).
+  local authorities, constituencies), **Designations** (SSSIs [GB], National Parks &
+  Landscapes [GB], Nitrate Vulnerable Zones [England]).
+- Cluster popup: thematic labels on top, then overlap sections (each with a count),
+  contact name / email / website.
 
 ## Data layers & sources (all GB unless noted)
 - Rivers (major, named >35km): OS Open Rivers (GeoPackage).
@@ -60,9 +63,16 @@ never write to the live store.
 ### Track A — Groundswell demo (get facilitators keen) — DO FIRST
 Demo runs on **Tom's laptop, loaded in advance**, so the 50 MB isn't a blocker; only
 the Mapbox basemap needs live internet. So lazy-load is NOT needed for the demo.
-1. Add **facilitator-relevant layers** (the priority): Scottish & Welsh SSSIs,
-   National Parks, National Landscapes (AONBs), NVZs, and **Countryside Stewardship
-   Facilitation Fund (CSFF) clusters** (most on-topic — "groups already organised near you").
+1. Add **facilitator-relevant layers** — DONE: Scottish & Welsh SSSIs, National Parks
+   & National Landscapes (England/Scotland/Wales), NVZs (England). **CSFF clusters
+   NOT done** — Natural England publishes only individual CS *agreement* holdings, not
+   facilitation-*group* boundaries, so there's no clean polygon dataset (would need a
+   FOI / direct ask to NE). Parked.
+   - Data sources added: NVZ = environment.data.gov.uk NVZ-2021 GeoJSON (dissolved by
+     type). Scotland parks/NSAs = maps.gov.scot ScotGov/ProtectedSites MapServer (0,1,3).
+     Wales parks/AONB/SSSI = DataMapWales geoserver WFS (inspire-nrw). Scotland SSSI =
+     NatureScot FeatureServer (services1.arcgis.com/LM9GyVFsughzHdbO). England parks/AONB
+     = Natural England (services.arcgis.com/JJzESW51TqeY9uat).
 2. Content + polish pass.
 3. Stable local **demo build** (`npm run build && npm start`).
 - Demo-day reliability: run locally; pre-cache basemap by panning the demo areas on
