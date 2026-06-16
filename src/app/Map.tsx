@@ -9,8 +9,15 @@ import type { FarmGroup, FarmsGeoJSON, Label } from "@/lib/farmData";
 import { Badge } from "@/components/ui/badge";
 import { readableText } from "@/lib/utils";
 
-const INITIAL_CENTER: [number, number] = [-1.5491, 53.8008];
-const INITIAL_ZOOM = 5;
+// Centre on GB (England, Wales & Scotland), not just England.
+const INITIAL_CENTER: [number, number] = [-3.6, 55.2];
+const INITIAL_ZOOM = 4.6;
+// Bounds used to frame the whole of GB on first load (mainland; Shetland sits
+// just off the top, which is fine for an opening view).
+const GB_BOUNDS: [[number, number], [number, number]] = [
+  [-8.2, 49.9],
+  [1.9, 58.8],
+];
 
 const FILL_LAYER_ID = "farms-fill";
 const LINE_LAYER_ID = "farms-line";
@@ -608,20 +615,15 @@ export const Map = ({
     );
   }, [groups, ready]);
 
-  // On first load, fit the view to all farms (instant, so the splash reveals an
-  // already-framed map). Runs once; later filtering won't re-frame the map.
+  // On first load, frame the whole of GB (so Scotland & Wales are visible, not
+  // just the England clusters). Instant, so the splash reveals an already-framed
+  // map. Runs once; later filtering won't re-frame the map.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !ready || didFitRef.current || farms.features.length === 0) return;
-    const bounds = new mapboxgl.LngLatBounds();
-    for (const f of farms.features) {
-      eachPosition(f.geometry.coordinates, (p) => bounds.extend(p));
-    }
-    if (!bounds.isEmpty()) {
-      map.fitBounds(bounds, { padding: 60, duration: 0 });
-      didFitRef.current = true;
-    }
-  }, [farms, ready]);
+    if (!map || !ready || didFitRef.current) return;
+    map.fitBounds(GB_BOUNDS, { padding: 20, duration: 0 });
+    didFitRef.current = true;
+  }, [ready]);
 
   // Toggle catchment / river-basin layer visibility from the layers panel.
   useEffect(() => {
